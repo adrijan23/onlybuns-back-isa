@@ -1,6 +1,5 @@
 package team5.onlybuns.dto;
 
-// DTO koji preuzima podatke iz HTML forme za registraciju
 public class UserRequest {
 
 	private Long id;

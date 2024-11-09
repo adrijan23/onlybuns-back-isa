@@ -1,6 +1,6 @@
 package team5.onlybuns.dto;
 
-// DTO koji enkapsulira generisani JWT i njegovo trajanje koji se vracaju klijentu
+
 public class UserTokenState {
 	
     private String accessToken;

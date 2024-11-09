@@ -1,6 +1,6 @@
 package team5.onlybuns.dto;
 
-// DTO za login
+
 public class JwtAuthenticationRequest {
 	
     private String username;

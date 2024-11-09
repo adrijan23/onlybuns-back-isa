@@ -19,7 +19,7 @@ import team5.onlybuns.model.User;
 import team5.onlybuns.service.UserService;
 
 
-// Primer kontrolera cijim metodama mogu pristupiti samo autorizovani korisnici
+
 @RestController
 @RequestMapping(value = "/api", produces = MediaType.APPLICATION_JSON_VALUE)
 @CrossOrigin
@@ -32,9 +32,7 @@ public class UserController {
 	@Autowired
 	private UserService userService;
 
-	// Za pristup ovoj metodi neophodno je da ulogovani korisnik ima ADMIN ulogu
-	// Ukoliko nema, server ce vratiti gresku 403 Forbidden
-	// Korisnik jeste autentifikovan, ali nije autorizovan da pristupi resursu
+
 	@GetMapping("/user/{userId}")
 	@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
 
@@ -53,11 +51,5 @@ public class UserController {
 	public User user(Principal user) {
 		return this.userService.findByUsername(user.getName());
 	}
-	
-	@GetMapping("/foo")
-    public Map<String, String> getFoo() {
-        Map<String, String> fooObj = new HashMap<>();
-        fooObj.put("foo", "bar");
-        return fooObj;
-    }
+
 }
