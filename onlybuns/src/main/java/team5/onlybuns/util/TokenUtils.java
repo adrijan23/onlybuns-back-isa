@@ -19,7 +19,7 @@ import team5.onlybuns.model.User;
 public class TokenUtils {
 
 
-	@Value("spring-security-example")
+	@Value("onlybuns")
 	private String APP_NAME;
 
 	@Value("somesecret")

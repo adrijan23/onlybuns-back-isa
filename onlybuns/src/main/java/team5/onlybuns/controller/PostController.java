@@ -1,6 +1,8 @@
 package team5.onlybuns.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import team5.onlybuns.dto.PostRequest;
@@ -10,14 +12,13 @@ import team5.onlybuns.repository.ImageRepository;
 import team5.onlybuns.repository.PostRepository;
 import team5.onlybuns.repository.UserRepository;
 
+import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
-
-    public static final String UPLOAD_DIR = "uploads/";
 
     @Autowired
     private PostRepository postRepository;
@@ -28,45 +29,63 @@ public class PostController {
     @Autowired
     private UserRepository userRepository;
 
-    // Endpoint to publish a new post with an image
+    public static final String UPLOAD_DIR = "uploads/";
+
+    /**
+     * Create a new post with an optional image.
+     */
     @PostMapping
-    public Post createPost(
-            @RequestPart("postRequest") PostRequest postRequest,
-            @RequestPart(value = "image", required = false) MultipartFile image
-    ) {
-        // Find the user by ID
-        User user = userRepository.findById(postRequest.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public ResponseEntity<Post> createPost(
+            @Valid @RequestPart("postRequest") PostRequest postRequest,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
 
-        String imagePath = null;
-        if (image != null && !image.isEmpty()) {
-            imagePath = imageRepository.saveImage(image);
+        try {
+            // Fetch the user by ID
+            User user = userRepository.findById(postRequest.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            // Save the image if provided
+            String imagePath = null;
+            if (image != null && !image.isEmpty()) {
+                imagePath = imageRepository.saveImage(image);
+            }
+
+            // Create a new post
+            Post post = new Post();
+            post.setDescription(postRequest.getDescription());
+            post.setAddress(postRequest.getAddress());
+            post.setImagePath(imagePath);
+            post.setUser(user);
+            post.setLatitude(postRequest.getLatitude());
+            post.setLongitude(postRequest.getLongitude());
+            post.setCreatedAt(LocalDateTime.now());
+
+            Post savedPost = postRepository.save(post);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedPost);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-
-        // Create a new post
-        Post post = new Post();
-        post.setDescription(postRequest.getDescription());
-        post.setAddress(postRequest.getAddress());
-        post.setImagePath(imagePath);
-        post.setUser(user);
-        post.setLatitude(postRequest.getLatitude());
-        post.setLongitude(postRequest.getLongitude());
-        post.setCreatedAt(LocalDateTime.now());
-
-        return postRepository.save(post);
     }
 
-
-    // Fetch all posts (for verification/testing)
+    /**
+     * Fetch all posts.
+     */
     @GetMapping
-    public List<Post> getAllPosts() {
-        System.out.println("SADASDASDADSASDASD");
-
-        return postRepository.findAll();
+    public ResponseEntity<List<Post>> getAllPosts() {
+        List<Post> posts = postRepository.findAll();
+        return ResponseEntity.ok(posts);
     }
-    @GetMapping("/{userId}")
-    public List<Post> getAllByUserId(@PathVariable Long userId) {
 
-        return postRepository.findByUserId(userId);
+    /**
+     * Fetch all posts by a specific user ID.
+     */
+    @GetMapping("/{userId}")
+    public ResponseEntity<List<Post>> getAllByUserId(@PathVariable Long userId) {
+        List<Post> posts = postRepository.findByUserId(userId);
+        if (posts.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(posts);
     }
 }
