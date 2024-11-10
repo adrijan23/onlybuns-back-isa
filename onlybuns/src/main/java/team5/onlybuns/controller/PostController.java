@@ -11,6 +11,7 @@ import team5.onlybuns.model.User;
 import team5.onlybuns.repository.ImageRepository;
 import team5.onlybuns.repository.PostRepository;
 import team5.onlybuns.repository.UserRepository;
+import team5.onlybuns.service.PostService;
 
 import javax.validation.Valid;
 import java.time.LocalDateTime;
@@ -68,18 +69,17 @@ public class PostController {
         }
     }
 
-    /**
-     * Fetch all posts.
-     */
+    @GetMapping("id/{postId}")
+    public Post getPost(@PathVariable Long postId) {
+        return postRepository.findPostById(postId);
+    }
+
     @GetMapping
     public ResponseEntity<List<Post>> getAllPosts() {
         List<Post> posts = postRepository.findAll();
         return ResponseEntity.ok(posts);
     }
-
-    /**
-     * Fetch all posts by a specific user ID.
-     */
+  
     @GetMapping("/{userId}")
     public ResponseEntity<List<Post>> getAllByUserId(@PathVariable Long userId) {
         List<Post> posts = postRepository.findByUserId(userId);
