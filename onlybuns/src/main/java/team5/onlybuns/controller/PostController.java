@@ -7,6 +7,7 @@ import team5.onlybuns.model.Post;
 import team5.onlybuns.model.User;
 import team5.onlybuns.repository.PostRepository;
 import team5.onlybuns.repository.UserRepository;
+import team5.onlybuns.service.PostService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -42,6 +43,11 @@ public class PostController {
         return postRepository.save(post);
     }
 
+    @GetMapping("/{postId}")
+    public Post getPost(@PathVariable Long postId) {
+        return postRepository.findPostById(postId);
+    }
+
     // Fetch all posts (for verification/testing)
     @GetMapping
     public List<Post> getAllPosts() {
@@ -49,7 +55,7 @@ public class PostController {
 
         return postRepository.findAll();
     }
-    @GetMapping("/{userId}")
+    @GetMapping("/user/{userId}")
     public List<Post> getAllByUserId(@PathVariable Long userId) {
 
         return postRepository.findByUserId(userId);

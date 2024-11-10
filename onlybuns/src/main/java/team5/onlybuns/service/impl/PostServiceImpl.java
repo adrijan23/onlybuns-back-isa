@@ -52,6 +52,11 @@ public class PostServiceImpl implements PostService {
         return postRepository.save(post);
     }
 
+    @Override
+    public Post getPost(Long id) {
+        return postRepository.findPostById(id);
+    }
+
     // Method to fetch posts by user ID
     public List<Post> getPostsByUser(Long userId) {
         return postRepository.findByUserId(userId);
