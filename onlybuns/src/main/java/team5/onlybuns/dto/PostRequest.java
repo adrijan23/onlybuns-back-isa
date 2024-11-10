@@ -10,5 +10,7 @@ public class PostRequest {
     private String address;
     private Long userId;
     private String imagePath; // Path to the image, if applicable
+    private double longitude;
+    private double latitude;
 }
 
