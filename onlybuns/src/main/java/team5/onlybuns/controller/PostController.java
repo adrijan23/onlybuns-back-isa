@@ -6,11 +6,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import team5.onlybuns.dto.PostRequest;
+import team5.onlybuns.model.Comment;
 import team5.onlybuns.model.Post;
 import team5.onlybuns.model.User;
 import team5.onlybuns.repository.ImageRepository;
 import team5.onlybuns.repository.PostRepository;
 import team5.onlybuns.repository.UserRepository;
+import team5.onlybuns.service.CommentsService;
 import team5.onlybuns.service.PostService;
 import team5.onlybuns.service.UserService;
 
@@ -30,6 +32,9 @@ public class PostController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private CommentsService commentsService;
 
     public static final String UPLOAD_DIR = "uploads/";
 
@@ -87,5 +92,16 @@ public class PostController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
         return ResponseEntity.ok(posts);
+    }
+
+    @GetMapping("/{postId}/comments")
+    public ResponseEntity<List<Comment>> getCommentsByPostId(@PathVariable Long postId) {
+        List<Comment> comments = commentsService.findCommentsByPostId(postId);
+
+        // Check if comments exist for the given post
+        if (comments.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(comments);
     }
 }
