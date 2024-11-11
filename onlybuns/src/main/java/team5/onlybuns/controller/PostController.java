@@ -37,7 +37,7 @@ public class PostController {
     @PostMapping
     public ResponseEntity<Post> createPost(
             @Valid @RequestPart("postRequest") PostRequest postRequest,
-            @RequestPart(value = "image", required = false) MultipartFile image) {
+            @RequestPart(value = "image", required = true) MultipartFile image) {
 
         try {
             // Fetch the user by ID
