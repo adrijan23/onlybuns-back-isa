@@ -10,5 +10,11 @@ public interface PostService {
 
     Post createPost(String description, String address, Long userId, MultipartFile file) throws IOException;
     List<Post> getPostsByUser(Long userId);
+
+    Post save(Post post);
+
+    List<Post> findByUserId(Long userId);
+
+    List<Post> findAll();
     Post getPost(Long id);
 }

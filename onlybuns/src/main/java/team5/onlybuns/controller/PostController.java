@@ -12,6 +12,7 @@ import team5.onlybuns.repository.ImageRepository;
 import team5.onlybuns.repository.PostRepository;
 import team5.onlybuns.repository.UserRepository;
 import team5.onlybuns.service.PostService;
+import team5.onlybuns.service.UserService;
 
 import javax.validation.Valid;
 import java.time.LocalDateTime;
@@ -22,13 +23,13 @@ import java.util.List;
 public class PostController {
 
     @Autowired
-    private PostRepository postRepository;
+    private PostService postService;
 
     @Autowired
     private ImageRepository imageRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private UserService userService;
 
     public static final String UPLOAD_DIR = "uploads/";
 
@@ -38,12 +39,11 @@ public class PostController {
     @PostMapping
     public ResponseEntity<Post> createPost(
             @Valid @RequestPart("postRequest") PostRequest postRequest,
-            @RequestPart(value = "image", required = false) MultipartFile image) {
+            @RequestPart(value = "image", required = true) MultipartFile image) {
 
         try {
             // Fetch the user by ID
-            User user = userRepository.findById(postRequest.getUserId())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+            User user = userService.findById(postRequest.getUserId());
 
             // Save the image if provided
             String imagePath = null;
@@ -61,7 +61,7 @@ public class PostController {
             post.setLongitude(postRequest.getLongitude());
             post.setCreatedAt(LocalDateTime.now());
 
-            Post savedPost = postRepository.save(post);
+            Post savedPost = postService.save(post);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedPost);
 
         } catch (Exception e) {
@@ -71,18 +71,18 @@ public class PostController {
 
     @GetMapping("id/{postId}")
     public Post getPost(@PathVariable Long postId) {
-        return postRepository.findPostById(postId);
+        return postService.getPost(postId);
     }
 
     @GetMapping
     public ResponseEntity<List<Post>> getAllPosts() {
-        List<Post> posts = postRepository.findAll();
+        List<Post> posts = postService.findAll();
         return ResponseEntity.ok(posts);
     }
   
     @GetMapping("/{userId}")
     public ResponseEntity<List<Post>> getAllByUserId(@PathVariable Long userId) {
-        List<Post> posts = postRepository.findByUserId(userId);
+        List<Post> posts = postService.findByUserId(userId);
         if (posts.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
