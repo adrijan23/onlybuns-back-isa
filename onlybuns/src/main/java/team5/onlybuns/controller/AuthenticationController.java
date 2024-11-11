@@ -10,10 +10,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import team5.onlybuns.dto.JwtAuthenticationRequest;
@@ -21,6 +18,7 @@ import team5.onlybuns.dto.UserRequest;
 import team5.onlybuns.dto.UserTokenState;
 import team5.onlybuns.exception.ResourceConflictException;
 import team5.onlybuns.model.User;
+import team5.onlybuns.service.EmailService;
 import team5.onlybuns.service.UserService;
 import team5.onlybuns.util.TokenUtils;
 
@@ -37,6 +35,9 @@ public class AuthenticationController {
 
 	@Autowired
 	private UserService userService;
+
+	@Autowired
+	private EmailService emailService;
 
 	@PostMapping("/login")
 	public ResponseEntity<UserTokenState> createAuthenticationToken(
@@ -55,15 +56,47 @@ public class AuthenticationController {
 	}
 
 	@PostMapping("/signup")
-	public ResponseEntity<User> addUser(@RequestBody UserRequest userRequest, UriComponentsBuilder ucBuilder) {
-		User existUser = this.userService.findByUsername(userRequest.getUsername());
+	public ResponseEntity<?> registerUser(@RequestBody UserRequest userRequest) {
+		User existUser = userService.findByUsername(userRequest.getUsername());
 
 		if (existUser != null) {
-			throw new ResourceConflictException(userRequest.getId(), "Username already exists");
+			return ResponseEntity.status(HttpStatus.CONFLICT)
+					.body("Username already exists");
 		}
 
-		User user = this.userService.save(userRequest);
+		User user = userService.save(userRequest);
+
+		// Generate activation link
+		String token = tokenUtils.generateToken(user.getUsername());
+		String activationLink = "http://localhost:3000/activate?token=" + token;
+
+		// Send email
+		emailService.sendEmail(userRequest.getEmail(),
+				"Account Activation",
+				"Please click the link to activate your account: " + activationLink);
 
 		return new ResponseEntity<>(user, HttpStatus.CREATED);
 	}
+
+	@GetMapping("/activate")
+	public ResponseEntity<?> activateUser(@RequestParam String token) {
+		String username = tokenUtils.getUsernameFromToken(token);
+		User user = userService.findByUsername(username);
+
+		if (user != null) {
+			user.setEnabled(true);
+			userService.update(user);
+			return ResponseEntity.ok("Account activated successfully");
+		} else {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid activation link");
+		}
+	}
+
+
+	@GetMapping("/test-email")
+	public ResponseEntity<String> testEmail() {
+		emailService.sendEmail("tadik16734@gianes.com", "Test Subject", "This is a test email.");
+		return ResponseEntity.ok("Email sent successfully");
+	}
+
 }
