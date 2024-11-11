@@ -69,18 +69,17 @@ public class PostController {
         }
     }
 
-    /**
-     * Fetch all posts.
-     */
+    @GetMapping("id/{postId}")
+    public Post getPost(@PathVariable Long postId) {
+        return postRepository.findPostById(postId);
+    }
+
     @GetMapping
     public ResponseEntity<List<Post>> getAllPosts() {
         List<Post> posts = postService.findAll();
         return ResponseEntity.ok(posts);
     }
-
-    /**
-     * Fetch all posts by a specific user ID.
-     */
+  
     @GetMapping("/{userId}")
     public ResponseEntity<List<Post>> getAllByUserId(@PathVariable Long userId) {
         List<Post> posts = postService.findByUserId(userId);
