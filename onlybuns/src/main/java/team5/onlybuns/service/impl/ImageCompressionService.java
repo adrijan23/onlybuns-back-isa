@@ -49,11 +49,15 @@ public class ImageCompressionService {
         Instant oneMonthAgo = Instant.now().minus(30, ChronoUnit.DAYS);
 
         for (File file : files) {
-            //if (isImageFile(file) && isOlderThanOneMonth(file, oneMonthAgo)) {
+            if (isImageFile(file) && isOlderThanOneMonth(file, oneMonthAgo) && !isAlreadyCompressed(file)) {
                 compressImage(file);
-            //}
+            }
         }
         logger.info("Image compression completed.");
+    }
+
+    private boolean isAlreadyCompressed(File file) {
+        return file.getName().startsWith("compressed_");
     }
 
     private boolean isImageFile(File file) {
