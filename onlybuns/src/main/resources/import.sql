@@ -20,3 +20,5 @@ INSERT INTO COMMENTS (content, created_at, user_id, post_id) VALUES ('Wow, this 
 INSERT INTO COMMENTS (content, created_at, user_id, post_id) VALUES ('Aww, the rabbit is adorable!', '2024-11-09 16:00:00', 1, 2);
 INSERT INTO COMMENTS (content, created_at, user_id, post_id) VALUES ('Looks like a great hike; I should try it!', '2024-11-09 17:00:00', 2, 3);
 INSERT INTO COMMENTS (content, created_at, user_id, post_id) VALUES ('This view is totally worth the climb!', '2024-11-09 17:45:00', 1, 3);
+
+INSERT INTO USER_FOLLOWING (follower_id, following_id) VALUES (1, 1);

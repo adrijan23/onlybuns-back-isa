@@ -13,7 +13,6 @@ import java.util.Set;
 @Table(name = "POSTS")
 public class Post {
 
-    @Getter
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)

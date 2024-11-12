@@ -136,9 +136,4 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
         return post.getLikes();
     }
-
-    public int countLikes(Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
-        return post.getLikes().size();
-    }
 }
