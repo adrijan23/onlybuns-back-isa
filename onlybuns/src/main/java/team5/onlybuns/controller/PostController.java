@@ -85,7 +85,7 @@ public class PostController {
         List<Post> posts = postService.findAll();
         return ResponseEntity.ok(posts);
     }
-  
+
     @GetMapping("/{userId}")
     public ResponseEntity<List<Post>> getAllByUserId(@PathVariable Long userId) {
         List<Post> posts = postService.findByUserId(userId);
@@ -175,15 +175,16 @@ public class PostController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-      
-    @GetMapping("/{postId}/comments")
-    public ResponseEntity<List<Comment>> getCommentsByPostId(@PathVariable Long postId) {
-        List<Comment> comments = commentsService.findCommentsByPostId(postId);
-
-        // Check if comments exist for the given post
-        if (comments.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(comments);
     }
+
+        @GetMapping("/{postId}/comments")
+        public ResponseEntity<List<Comment>> getCommentsByPostId(@PathVariable Long postId){
+            List<Comment> comments = commentsService.findCommentsByPostId(postId);
+
+            // Check if comments exist for the given post
+            if (comments.isEmpty()) {
+                return ResponseEntity.noContent().build();
+            }
+            return ResponseEntity.ok(comments);
+        }
 }
