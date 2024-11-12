@@ -71,9 +71,9 @@ public class WebSecurityConfig {
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
         http.exceptionHandling().authenticationEntryPoint(restAuthenticationEntryPoint);
-
-		http.authorizeRequests()
-				.antMatchers("/uploads/**").permitAll().antMatchers("/auth/**").permitAll()
+		http.authorizeRequests().antMatchers("/auth/**").permitAll()
+			.antMatchers(HttpMethod.GET, "/api/posts").permitAll()
+			.antMatchers(HttpMethod.GET, "/api/posts/{postId}/comments").permitAll()
 			.anyRequest().authenticated().and()
 			.cors().and()
 			.addFilterBefore(new TokenAuthenticationFilter(tokenUtils,  userDetailsService()), BasicAuthenticationFilter.class);

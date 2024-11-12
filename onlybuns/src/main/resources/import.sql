@@ -14,3 +14,9 @@ INSERT INTO USER_ROLE (user_id, role_id) VALUES (2, 2); -- user-u dodeljujemo ro
 INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('123 Elm Street, Springfield', '2024-11-09 14:30:00', 'Beautiful sunset view', 'uploads/1_sunset.jpg', 37.7749, -122.4194, 1);
 INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('456 Maple Avenue, Metropolis', '2024-11-09 15:45:00', 'Cute rabbit in the park', 'uploads/2_rabbit.jpg', 40.7128, -74.0060, 2);
 INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('789 Pine Road, Gotham', '2024-11-09 16:00:00', 'Amazing mountain hike', 'uploads/3_mountains.jpg', 34.0522, -118.2437, 1);
+
+
+INSERT INTO COMMENTS (content, created_at, user_id, post_id) VALUES ('Wow, this view is stunning!', '2024-11-09 15:00:00', 2, 1);
+INSERT INTO COMMENTS (content, created_at, user_id, post_id) VALUES ('Aww, the rabbit is adorable!', '2024-11-09 16:00:00', 1, 2);
+INSERT INTO COMMENTS (content, created_at, user_id, post_id) VALUES ('Looks like a great hike; I should try it!', '2024-11-09 17:00:00', 2, 3);
+INSERT INTO COMMENTS (content, created_at, user_id, post_id) VALUES ('This view is totally worth the climb!', '2024-11-09 17:45:00', 1, 3);
