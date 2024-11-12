@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import team5.onlybuns.dto.CommentRequest;
 import team5.onlybuns.dto.PostRequest;
 import team5.onlybuns.model.Comment;
 import team5.onlybuns.model.Post;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/api/posts")
 public class PostController {
 
@@ -160,7 +162,7 @@ public class PostController {
         }
     }
 
-    @GetMapping("/{postId}/like")
+    @GetMapping("/{postId}/likes")
     public ResponseEntity<Set<User>> getLikes(@PathVariable Long postId, @RequestParam Long userId) {
         try {
 
@@ -176,15 +178,26 @@ public class PostController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+      
+    @GetMapping("/{postId}/comments")
+    public ResponseEntity<List<Comment>> getCommentsByPostId(@PathVariable Long postId) {
+        List<Comment> comments = commentsService.findCommentsByPostId(postId);
 
-        @GetMapping("/{postId}/comments")
-        public ResponseEntity<List<Comment>> getCommentsByPostId(@PathVariable Long postId){
-            List<Comment> comments = commentsService.findCommentsByPostId(postId);
-
-            // Check if comments exist for the given post
-            if (comments.isEmpty()) {
-                return ResponseEntity.noContent().build();
-            }
-            return ResponseEntity.ok(comments);
+        // Check if comments exist for the given post
+        if (comments.isEmpty()) {
+            return ResponseEntity.noContent().build();
         }
+        return ResponseEntity.ok(comments);
+    }
+
+    @PostMapping("/{postId}/comments")
+    public ResponseEntity<Comment> addComment(@PathVariable Long postId, @RequestBody CommentRequest comment) {
+        try {
+            Comment createdComment = commentsService.createComment(comment.getContent(), postId, comment.getUserId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdComment);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
 }

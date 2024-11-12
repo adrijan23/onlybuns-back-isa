@@ -1,6 +1,7 @@
 package team5.onlybuns.service.impl;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -61,5 +62,31 @@ public class UserServiceImpl implements UserService {
 	public void update(User user) {
 		userRepository.save(user);
 	}
+
+//	public void follow(Long userId, Long targetUserId) {
+//		User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+//		User targetUser = userRepository.findById(targetUserId).orElseThrow(() -> new RuntimeException("User not found"));
+//
+//		user.getFollowing().add(targetUser);
+//		userRepository.save(user);
+//	}
+//
+//	public void unfollow(Long userId, Long targetUserId) {
+//		User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+//		User targetUser = userRepository.findById(targetUserId).orElseThrow(() -> new RuntimeException("User not found"));
+//
+//		user.getFollowing().remove(targetUser);
+//		userRepository.save(user);
+//	}
+//
+//	public Set<User> getFollowers(Long userId) {
+//		User user = userRepository.findById(userId).orElseThrow();
+//		return user.getFollowers();
+//	}
+//
+//	public Set<User> getFollowing(Long userId) {
+//		User user = userRepository.findById(userId).orElseThrow();
+//		return user.getFollowing();
+//	}
 
 }

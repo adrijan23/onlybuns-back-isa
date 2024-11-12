@@ -1,10 +1,7 @@
 package team5.onlybuns.model;
 
 import java.sql.Timestamp;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -118,7 +115,7 @@ public class User implements UserDetails {
     public void setRoles(List<Role> roles) {
         this.roles = roles;
     }
-    
+
     public List<Role> getRoles() {
        return roles;
     }
@@ -153,6 +150,34 @@ public class User implements UserDetails {
     public void setLastPasswordResetDate(Timestamp lastPasswordResetDate) {
         this.lastPasswordResetDate = lastPasswordResetDate;
     }
+
+//    @ManyToMany(fetch = FetchType.LAZY)
+//    @JoinTable(
+//            name = "user_following", // name of the join table
+//            joinColumns = @JoinColumn(name = "follower_id", referencedColumnName = "id"),
+//            inverseJoinColumns = @JoinColumn(name = "following_id", referencedColumnName = "id")
+//    )
+//    private Set<User> following = new HashSet<>();
+//
+//    @ManyToMany(mappedBy = "following")
+//    @JsonIgnore // This will completely ignore the followers field during serialization
+//    private Set<User> followers = new HashSet<>();
+//
+//    public Set<User> getFollowing() {
+//        return following;
+//    }
+//
+//    public void setFollowing(Set<User> following) {
+//        this.following = following;
+//    }
+//
+//    public Set<User> getFollowers() {
+//        return followers;
+//    }
+//
+//    public void setFollowers(Set<User> followers) {
+//        this.followers = followers;
+//    }
 
     @JsonIgnore
     @Override
