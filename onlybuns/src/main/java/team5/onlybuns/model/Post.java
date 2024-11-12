@@ -15,6 +15,7 @@ public class Post {
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Getter
     private Long id;
 
     @Getter
@@ -45,6 +46,7 @@ public class Post {
     private Set<Comment> comments = new HashSet<>();
 
     @ManyToMany
+    @Getter
     private Set<User> likes = new HashSet<>();
 
     public Post() {

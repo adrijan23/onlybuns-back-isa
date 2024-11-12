@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -57,6 +58,37 @@ public class PostServiceImpl implements PostService {
         return postRepository.findPostById(id);
     }
 
+    @Override
+    public void deletePost(Long id) {
+        // Find the post by ID
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        // Delete the post
+        postRepository.delete(post);
+    }
+
+    @Override
+    public Post updatePost(Long id, Post updatedPost) {
+        // Find the post by ID
+        Post existingPost = postRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        // Update the fields of the post
+        existingPost.setDescription(updatedPost.getDescription());
+        existingPost.setAddress(updatedPost.getAddress());
+        existingPost.setLatitude(updatedPost.getLatitude());
+        existingPost.setLongitude(updatedPost.getLongitude());
+
+        // If the image path needs to be updated, handle file upload (optional)
+        if (updatedPost.getImagePath() != null) {
+            existingPost.setImagePath(updatedPost.getImagePath());
+        }
+
+        // Save the updated post
+        return postRepository.save(existingPost);
+    }
+
     // Method to fetch posts by user ID
     public List<Post> getPostsByUser(Long userId) {
         return postRepository.findByUserId(userId);
@@ -75,5 +107,38 @@ public class PostServiceImpl implements PostService {
     @Override
     public List<Post> findAll() {
         return postRepository.findAll();
+    }
+
+    public Post addLike(Long postId, Long userId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Add the user to the post's likes if not already liked
+        if (!post.getLikes().contains(user)) {
+            post.getLikes().add(user);
+        }
+
+        return postRepository.save(post);
+    }
+
+    public Post removeLike(Long postId, Long userId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Remove the user from the post's likes if liked
+        post.getLikes().remove(user);
+
+        return postRepository.save(post);
+    }
+
+    @Override
+    public Set<User> getLikes(Long postId, Long userId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+        return post.getLikes();
+    }
+
+    public int countLikes(Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+        return post.getLikes().size();
     }
 }
