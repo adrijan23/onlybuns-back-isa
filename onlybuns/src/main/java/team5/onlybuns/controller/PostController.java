@@ -19,6 +19,7 @@ import team5.onlybuns.service.UserService;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -94,6 +95,87 @@ public class PostController {
         return ResponseEntity.ok(posts);
     }
 
+    @PutMapping("/id/{postId}")
+    public ResponseEntity<Post> updatePost(@PathVariable Long postId, @RequestBody PostRequest postRequest) {
+        try {
+            // Retrieve the existing post
+            Post post = postService.getPost(postId);
+
+            // Update the description and other fields
+            post.setDescription(postRequest.getDescription());
+            post.setAddress(postRequest.getAddress());
+            post.setLatitude(postRequest.getLatitude());
+            post.setLongitude(postRequest.getLongitude());
+
+            // Save updated post
+            Post updatedPost = postService.save(post);
+            return ResponseEntity.ok(updatedPost);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @DeleteMapping("/id/{postId}")
+    public ResponseEntity<Void> deletePost(@PathVariable Long postId) {
+        try {
+            postService.deletePost(postId);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/{postId}/like")
+    public ResponseEntity<Post> likePost(@PathVariable Long postId, @RequestParam Long userId) {
+        try {
+
+            Post added = postService.addLike(postId, userId);
+
+            if (added != null) {
+                return ResponseEntity.ok(added);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @DeleteMapping("/{postId}/like")
+    public ResponseEntity<Post> unlikePost(@PathVariable Long postId, @RequestParam Long userId) {
+        try {
+
+            Post removed = postService.removeLike(postId, userId);
+
+            if (removed != null) {
+                return ResponseEntity.ok(removed);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/{postId}/like")
+    public ResponseEntity<Set<User>> getLikes(@PathVariable Long postId, @RequestParam Long userId) {
+        try {
+
+            Set<User> likes = postService.getLikes(postId, userId);
+
+            if (likes != null) {
+                return ResponseEntity.ok(likes);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+      
     @GetMapping("/{postId}/comments")
     public ResponseEntity<List<Comment>> getCommentsByPostId(@PathVariable Long postId) {
         List<Comment> comments = commentsService.findCommentsByPostId(postId);
