@@ -87,7 +87,7 @@ public class PostController {
         List<Post> posts = postService.findAll();
         return ResponseEntity.ok(posts);
     }
-  
+
     @GetMapping("/{userId}")
     public ResponseEntity<List<Post>> getAllByUserId(@PathVariable Long userId) {
         List<Post> posts = postService.findByUserId(userId);
