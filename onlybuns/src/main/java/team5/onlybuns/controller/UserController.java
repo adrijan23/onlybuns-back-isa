@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -50,6 +51,13 @@ public class UserController {
 	@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
 	public User user(Principal user) {
 		return this.userService.findByUsername(user.getName());
+	}
+
+	@GetMapping("/user/page")
+	@PreAuthorize("hasRole('ADMIN')")
+	public Page<User> getUsers(@RequestParam(defaultValue = "0") int page,
+							   @RequestParam(defaultValue = "5") int size) {
+		return this.userService.getPaginated(page, size);
 	}
 
 //	@GetMapping("/user/{userId}/followers")
