@@ -7,6 +7,9 @@ import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -85,6 +88,11 @@ public class UserServiceImpl implements UserService {
 
 	public void update(User user) {
 		userRepository.save(user);
+	}
+  
+	public Page<User> getPaginated(int page, int size) {
+		Pageable pageable = PageRequest.of(page,size);
+		return userRepository.findAll(pageable);
 	}
 
 
