@@ -22,6 +22,8 @@ import team5.onlybuns.service.EmailService;
 import team5.onlybuns.service.UserService;
 import team5.onlybuns.util.TokenUtils;
 
+import java.time.LocalDateTime;
+
 
 @RestController
 @RequestMapping(value = "/auth", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -49,6 +51,8 @@ public class AuthenticationController {
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 
 		User user = (User) authentication.getPrincipal();
+		user.setLastActive(LocalDateTime.now());
+		userService.update(user);
 		String jwt = tokenUtils.generateToken(user.getUsername());
 		int expiresIn = tokenUtils.getExpiredIn();
 
