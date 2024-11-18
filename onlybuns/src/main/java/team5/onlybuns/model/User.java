@@ -1,6 +1,7 @@
 package team5.onlybuns.model;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import javax.persistence.Column;
@@ -54,6 +55,8 @@ public class User implements UserDetails {
     @Column(name = "last_password_reset_date")
     private Timestamp lastPasswordResetDate;
 
+    @Column(name= "last_active")
+    private LocalDateTime lastActive;
     @OneToMany(mappedBy = "user")
     private Set<Post> posts;
 
@@ -106,6 +109,14 @@ public class User implements UserDetails {
 
     public String getLastName() {
         return lastName;
+    }
+
+    public LocalDateTime getLastActive() {
+        return lastActive;
+    }
+
+    public void setLastActive(LocalDateTime lastActive) {
+        this.lastActive = lastActive;
     }
 
     public void setLastName(String lastName) {

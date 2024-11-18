@@ -1,9 +1,12 @@
 package team5.onlybuns.service.impl;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,6 +31,9 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private RoleService roleService;
 
+	@Autowired
+	private EmailServiceImpl emailService;
+
 	@Override
 	public User findByUsername(String username) throws UsernameNotFoundException {
 		return userRepository.findByUsername(username);
@@ -40,6 +46,24 @@ public class UserServiceImpl implements UserService {
 	public List<User> findAll() throws AccessDeniedException {
 		return userRepository.findAll();
 	}
+
+	@Scheduled(cron = "${notify-inactive.cron}")
+	public void notifyInactiveUsers() {
+
+		// Fetch users who have been inactive for more than 7 days
+		List<User> inactiveUsers = userRepository.findInactiveUsers();
+
+		// Send notification emails to inactive users
+		for (User user : inactiveUsers) {
+			System.out.println("Sending notification to : " + user.getUsername());
+			emailService.sendEmail(
+					user.getEmail(),
+					String.format("%s, You were inactive for 7 days. Check out the news!", user.getUsername()),
+					"Nema te nema"
+					);
+		}
+	}
+
 
 	@Override
 	public User save(UserRequest userRequest) {
@@ -62,6 +86,7 @@ public class UserServiceImpl implements UserService {
 	public void update(User user) {
 		userRepository.save(user);
 	}
+
 
 //	public void follow(Long userId, Long targetUserId) {
 //		User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
