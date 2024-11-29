@@ -57,6 +57,9 @@ public class User implements UserDetails {
 
     @Column(name= "last_active")
     private LocalDateTime lastActive;
+
+    @Column(name = "profile_image")
+    private String profileImage;
     @OneToMany(mappedBy = "user")
     private Set<Post> posts;
 
@@ -192,6 +195,13 @@ public class User implements UserDetails {
         this.lastPasswordResetDate = lastPasswordResetDate;
     }
 
+    public String getProfileImage() {
+        return profileImage;
+    }
+
+    public void setProfileImage(String profileImage) {
+        this.profileImage = profileImage;
+    }
 //    @ManyToMany(fetch = FetchType.LAZY)
 //    @JoinTable(
 //            name = "user_following", // name of the join table
