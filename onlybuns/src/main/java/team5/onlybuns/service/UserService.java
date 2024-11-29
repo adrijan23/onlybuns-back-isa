@@ -11,8 +11,10 @@ import team5.onlybuns.model.User;
 public interface UserService {
     User findById(Long id);
     User findByUsername(String username);
+    User findByUsernameWithLock(String username);
     List<User> findAll ();
 	User save(UserRequest userRequest);
+    User saveTransactional(UserRequest userRequest);
     void update(User user);
     Page<User> getPaginated (int page, int size);
 //    Set<User> getFollowers(Long id);
