@@ -141,9 +141,6 @@ public class UserServiceImpl implements UserService {
 		return this.userRepository.save(u);
 	}
 
-
-
-
 	public void update(User user) {
 		userRepository.save(user);
 	}
@@ -153,6 +150,33 @@ public class UserServiceImpl implements UserService {
 		return userRepository.findAll(pageable);
 	}
 
+	@Transactional
+	public void followUser(Long followerId, Long followingId) {
+		User follower = userRepository.findById(followerId).orElseThrow(() -> new RuntimeException("User not found"));
+		User following = userRepository.findById(followingId).orElseThrow(() -> new RuntimeException("User not found"));
+
+		follower.getFollowing().add(following);
+		userRepository.save(follower);
+	}
+
+	@Transactional
+	public void unfollowUser(Long followerId, Long followingId) {
+		User follower = userRepository.findById(followerId).orElseThrow(() -> new RuntimeException("User not found"));
+		User following = userRepository.findById(followingId).orElseThrow(() -> new RuntimeException("User not found"));
+
+		follower.getFollowing().remove(following);
+		userRepository.save(follower);
+	}
+
+	public Set<User> getFollowers(Long userId) {
+		User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+		return user.getFollowers();
+	}
+
+	public Set<User> getFollowing(Long userId) {
+		User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+		return user.getFollowing();
+	}
 
 //	public void follow(Long userId, Long targetUserId) {
 //		User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));

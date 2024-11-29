@@ -60,6 +60,36 @@ public class UserController {
 		return this.userService.getPaginated(page, size);
 	}
 
+	@PostMapping("/follow/{followingId}")
+	@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+	public ResponseEntity<?> followUser(@PathVariable Long followingId, Principal user) {
+		User currentUser = this.user(user);
+		userService.followUser(currentUser.getId(), followingId);
+		return ResponseEntity.ok("Successfully followed user");
+	}
+
+	@PostMapping("/unfollow/{followingId}")
+	@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+	public ResponseEntity<?> unfollowUser(@PathVariable Long followingId, Principal user) {
+		User currentUser = this.user(user);
+		userService.unfollowUser(currentUser.getId(), followingId);
+		return ResponseEntity.ok("Successfully unfollowed user");
+	}
+
+	@GetMapping("/{userId}/followers")
+	@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+	public ResponseEntity<Set<User>> getFollowers(@PathVariable Long userId) {
+		Set<User> followers = userService.getFollowers(userId);
+		return ResponseEntity.ok(followers);
+	}
+
+	@GetMapping("/{userId}/following")
+	@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+	public ResponseEntity<Set<User>> getFollowing(@PathVariable Long userId) {
+		Set<User> following = userService.getFollowing(userId);
+		return ResponseEntity.ok(following);
+	}
+
 //	@GetMapping("/user/{userId}/followers")
 //	public ResponseEntity<Set<User>> getFollowers(@PathVariable Long userId) {
 //		Set<User> followers = userService.getFollowers(userId);

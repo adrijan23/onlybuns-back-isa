@@ -73,6 +73,36 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     private List<Role> roles;
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "user_following", // Join table name
+            joinColumns = @JoinColumn(name = "follower_id", referencedColumnName = "id"), // Foreign key for the user who is following
+            inverseJoinColumns = @JoinColumn(name = "following_id", referencedColumnName = "id") // Foreign key for the user being followed
+    )
+    @JsonIgnore // Prevent serialization by default
+    private Set<User> following = new HashSet<>();
+
+    @ManyToMany(mappedBy = "following", fetch = FetchType.LAZY)
+    @JsonIgnore // To prevent infinite recursion during serialization
+    private Set<User> followers = new HashSet<>();
+
+    public Set<User> getFollowing() {
+        return following;
+    }
+
+    public void setFollowing(Set<User> following) {
+        this.following = following;
+    }
+
+    public Set<User> getFollowers() {
+        return followers;
+    }
+
+    public void setFollowers(Set<User> followers) {
+        this.followers = followers;
+    }
+
+
     public Long getId() {
         return id;
     }
