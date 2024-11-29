@@ -68,7 +68,7 @@ public class AuthenticationController {
 					.body("Username already exists");
 		}
 
-		User user = userService.save(userRequest);
+		User user = userService.saveTransactional(userRequest);
 
 		// Generate activation link
 		String token = tokenUtils.generateToken(user.getUsername());

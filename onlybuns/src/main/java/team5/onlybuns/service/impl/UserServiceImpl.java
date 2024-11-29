@@ -15,6 +15,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import team5.onlybuns.dto.UserRequest;
 import team5.onlybuns.model.Role;
 import team5.onlybuns.model.User;
@@ -36,6 +38,13 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	private EmailServiceImpl emailService;
+
+	@Transactional
+	@Override
+	public User findByUsernameWithLock(String username) throws UsernameNotFoundException {
+		return userRepository.findByUsernameWithLock(username);
+	}
+
 
 	@Override
 	public User findByUsername(String username) throws UsernameNotFoundException {
@@ -67,6 +76,52 @@ public class UserServiceImpl implements UserService {
 		}
 	}
 
+	@Transactional(isolation = Isolation.SERIALIZABLE)
+	@Override
+	public User saveTransactional(UserRequest userRequest) {
+		try {
+			// Log entry into the method
+			System.out.println("Entering save method: " + userRequest.getUsername() + " by thread " + Thread.currentThread().getName());
+
+			// Lock the username row
+			System.out.println("Locking username: " + userRequest.getUsername());
+			User existingUser = userRepository.findByUsernameWithLock(userRequest.getUsername());
+			if (existingUser != null) {
+				throw new IllegalArgumentException("Username already exists");
+			}
+
+
+
+			// Create a new user
+			User u = new User();
+			u.setUsername(userRequest.getUsername());
+			u.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+			u.setFirstName(userRequest.getFirstname());
+			u.setLastName(userRequest.getLastname());
+			u.setEnabled(false);
+			u.setEmail(userRequest.getEmail());
+
+			// Assign roles
+			List<Role> roles = roleService.findByName("ROLE_USER");
+			u.setRoles(roles);
+
+			// Save user and return result
+			User savedUser = userRepository.save(u);
+
+			// Log successful method exit
+			System.out.println("Exiting save method successfully: " + userRequest.getUsername() + " by thread " + Thread.currentThread().getName());
+			return savedUser;
+
+		} catch (org.springframework.dao.PessimisticLockingFailureException e) {
+			System.out.println("Locking failure for username: " + userRequest.getUsername() + " by thread " + Thread.currentThread().getName());
+			throw new IllegalArgumentException("Transaction conflict: username already in use");
+
+		} catch (Exception e) {
+			System.out.println("Unexpected exception for username: " + userRequest.getUsername() + " by thread " + Thread.currentThread().getName() + " - " + e.getMessage());
+			throw e; // Rethrow to ensure other issues are not silently swallowed
+		}
+	}
+
 
 	@Override
 	public User save(UserRequest userRequest) {
@@ -74,7 +129,7 @@ public class UserServiceImpl implements UserService {
 		u.setUsername(userRequest.getUsername());
 
 		u.setPassword(passwordEncoder.encode(userRequest.getPassword()));
-		
+
 		u.setFirstName(userRequest.getFirstname());
 		u.setLastName(userRequest.getLastname());
 		u.setEnabled(false);
@@ -82,9 +137,12 @@ public class UserServiceImpl implements UserService {
 
 		List<Role> roles = roleService.findByName("ROLE_USER");
 		u.setRoles(roles);
-		
+
 		return this.userRepository.save(u);
 	}
+
+
+
 
 	public void update(User user) {
 		userRepository.save(user);
