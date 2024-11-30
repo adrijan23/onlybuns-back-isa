@@ -21,7 +21,7 @@ INSERT INTO USER_ROLE (user_id, role_id) VALUES (4, 1); -- user-u dodeljujemo ro
 INSERT INTO USER_ROLE (user_id, role_id) VALUES (5, 1); -- user-u dodeljujemo rolu USER
 INSERT INTO USER_ROLE (user_id, role_id) VALUES (6, 1); -- user-u dodeljujemo rolu USER
 
-INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('123 Elm Street, Springfield', '2024-11-09 14:30:00', 'Beautiful sunset view', 'uploads\1_rabbit.jpg', 37.7749, -122.4194, 1);
+INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('123 Elm Street, Springfield', '2023-11-09 14:30:00', 'Beautiful sunset view', 'uploads\1_rabbit.jpg', 37.7749, -122.4194, 1);
 INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('456 Maple Avenue, Metropolis', '2024-11-09 15:45:00', 'Cute rabbit in the park', 'uploads\2_rabbit.jpg', 40.7128, -74.0060, 2);
 INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('789 Pine Road, Gotham', '2024-11-09 16:00:00', 'Amazing mountain hike', 'uploads\3_rabbit.jpg', 34.0522, -118.2437, 1);
 

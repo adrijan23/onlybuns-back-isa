@@ -24,4 +24,8 @@ public interface PostService {
     Post addLike(Long postId, Long userId);
     Post removeLike(Long postId, Long userId);
     Set<User> getLikes(Long postId, Long userId);
+    Integer getPostCount();
+    Integer getPostsInLastMonth();
+    List<Post> getTopPostsAllTime();
+    List<Post> getTopPostsLast7Days();
 }

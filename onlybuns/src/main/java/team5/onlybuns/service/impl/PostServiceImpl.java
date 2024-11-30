@@ -1,6 +1,8 @@
 package team5.onlybuns.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import team5.onlybuns.model.Post;
@@ -130,10 +132,33 @@ public class PostServiceImpl implements PostService {
 
         return postRepository.save(post);
     }
-
     @Override
     public Set<User> getLikes(Long postId, Long userId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
         return post.getLikes();
+    }
+
+    @Override
+    public Integer getPostCount() {
+        return (int)postRepository.count();
+    }
+
+    @Override
+    public Integer getPostsInLastMonth() {
+        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
+        return postRepository.countPostsInLastMonth(thirtyDaysAgo);
+    }
+
+    @Override
+    @Cacheable("topPostsWeekly")
+    public List<Post> getTopPostsLast7Days() {
+        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+        return postRepository.findTopPostsLast7Days(sevenDaysAgo, PageRequest.of(0, 5));
+    }
+
+    @Override
+    @Cacheable("topPostsAllTime")
+    public List<Post> getTopPostsAllTime() {
+        return postRepository.findTopPostsAllTime(PageRequest.of(0, 10)); // Top 10 posts
     }
 }

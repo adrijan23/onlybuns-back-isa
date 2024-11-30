@@ -200,4 +200,29 @@ public class PostController {
         }
     }
 
+    @GetMapping("/count/total")
+    public ResponseEntity<Integer> getPostCount() {
+        try {
+            Integer count = postService.getPostCount();
+            return ResponseEntity.status(HttpStatus.OK).body(count);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/count/last-month")
+    public Integer getMonthlyPosts() {
+        return postService.getPostsInLastMonth();
+    }
+
+    @GetMapping("/top-weekly")
+    public List<Post> getTopPostsWeekly() {
+        return postService.getTopPostsLast7Days();
+    }
+
+    @GetMapping("/top-all-time")
+    public List<Post> getTopPostsAllTime() {
+        return postService.getTopPostsAllTime();
+    }
+
 }
