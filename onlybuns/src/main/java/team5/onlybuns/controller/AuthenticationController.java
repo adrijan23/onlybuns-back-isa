@@ -1,8 +1,11 @@
 package team5.onlybuns.controller;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -41,22 +44,79 @@ public class AuthenticationController {
 	@Autowired
 	private EmailService emailService;
 
+	@Autowired
+	private CacheManager cacheManager; // EhCache Cache Manager
+
+	private static final int MAX_ATTEMPTS = 5; // Maksimalan broj pokušaja logina po IP adresi
+
 	@PostMapping("/login")
 	public ResponseEntity<UserTokenState> createAuthenticationToken(
-			@RequestBody JwtAuthenticationRequest authenticationRequest, HttpServletResponse response) {
+			@RequestBody JwtAuthenticationRequest authenticationRequest, HttpServletRequest request, HttpServletResponse response) {
 
-		Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-				authenticationRequest.getUsername(), authenticationRequest.getPassword()));
+		String clientIp = request.getRemoteAddr();
 
-		SecurityContextHolder.getContext().setAuthentication(authentication);
+		// Provera da li je IP blokiran
+		if (isBlocked(clientIp)) {
+			return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+					.body(null); // Ne šaljemo token jer je IP blokiran
+		}
 
-		User user = (User) authentication.getPrincipal();
-		user.setLastActive(LocalDateTime.now());
-		userService.update(user);
-		String jwt = tokenUtils.generateToken(user.getUsername());
-		int expiresIn = tokenUtils.getExpiredIn();
+		try {
+			Authentication authentication = authenticationManager.authenticate(
+					new UsernamePasswordAuthenticationToken(
+							authenticationRequest.getUsername(), authenticationRequest.getPassword()
+					)
+			);
 
-		return ResponseEntity.ok(new UserTokenState(jwt, expiresIn));
+			SecurityContextHolder.getContext().setAuthentication(authentication);
+
+			User user = (User) authentication.getPrincipal();
+			user.setLastActive(LocalDateTime.now());
+			userService.update(user);
+
+			// Resetujemo pokušaje za IP adresu nakon uspešnog logina
+			resetAttempts(clientIp);
+
+			String jwt = tokenUtils.generateToken(user.getUsername());
+			int expiresIn = tokenUtils.getExpiredIn();
+
+			return ResponseEntity.ok(new UserTokenState(jwt, expiresIn));
+		} catch (Exception e) {
+			// Registrujemo neuspešan pokušaj logina
+			registerFailedAttempt(clientIp);
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+		}
+	}
+
+	private boolean isBlocked(String ip) {
+		Cache cache = cacheManager.getCache("rateLimiterCache");
+		if (cache == null) {
+			return false; // Ako keš nije pronađen, IP nije blokiran
+		}
+
+		Integer attempts = cache.get(ip, Integer.class);
+		return attempts != null && attempts >= MAX_ATTEMPTS;
+	}
+
+	private void registerFailedAttempt(String ip) {
+		Cache cache = cacheManager.getCache("rateLimiterCache");
+		if (cache == null) {
+			return; // Ako keš nije pronađen, ne možemo pratiti pokušaje
+		}
+
+		Integer attempts = cache.get(ip, Integer.class);
+		if (attempts == null) {
+			cache.put(ip, 1); // Prvi neuspešan pokušaj
+		} else {
+			cache.put(ip, attempts + 1); // Uvećavamo broj pokušaja
+		}
+	}
+
+	private void resetAttempts(String ip) {
+		Cache cache = cacheManager.getCache("rateLimiterCache");
+		if (cache != null) {
+			cache.evict(ip); // Brišemo podatke za IP adresu nakon uspešnog logina
+		}
 	}
 
 	@PostMapping("/signup")
