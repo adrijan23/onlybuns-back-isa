@@ -21,5 +21,11 @@ public interface UserService {
 //    Set<User> getFollowing(Long id);
 //    void follow(Long userId, Long targetId);
 //    void unfollow(Long userId, Long targetId);
+    void followUser(Long followerId, Long followingId);
 
+    void unfollowUser(Long followerId, Long followingId);
+
+    Set<User> getFollowers(Long userId);
+
+    Set<User> getFollowing(Long userId);
 }
