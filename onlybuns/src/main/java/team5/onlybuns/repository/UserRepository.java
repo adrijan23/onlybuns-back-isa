@@ -2,12 +2,10 @@ package team5.onlybuns.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.*;
 
-import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 import team5.onlybuns.model.User;
 
 import javax.persistence.LockModeType;
@@ -28,5 +26,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findInactiveUsers();
 
     Page<User> findAll(Pageable pageable);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM User u WHERE u.enabled = false")
+    void deleteDisabledUsers();
 }
 
