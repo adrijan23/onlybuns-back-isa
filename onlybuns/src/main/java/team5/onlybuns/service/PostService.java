@@ -29,4 +29,5 @@ public interface PostService {
     List<Post> getTopPostsAllTime();
     List<Post> getTopPostsLast7Days();
     boolean hasUserLikedPost(Long postId, Long userId);
+    Integer getPostLikeCount(Long postId);
 }

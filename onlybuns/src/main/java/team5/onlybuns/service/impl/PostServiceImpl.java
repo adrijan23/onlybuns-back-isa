@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import team5.onlybuns.model.Like;
 import team5.onlybuns.model.Post;
 import team5.onlybuns.model.User;
+import team5.onlybuns.repository.LikeRepository;
 import team5.onlybuns.repository.PostRepository;
 import team5.onlybuns.repository.UserRepository;
 import team5.onlybuns.service.PostService;
@@ -32,6 +33,9 @@ public class PostServiceImpl implements PostService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private LikeRepository likeRepository;
 
     // Method to create a new post
     public Post createPost(String description, String address, Long userId, MultipartFile file) throws IOException {
@@ -168,6 +172,14 @@ public class PostServiceImpl implements PostService {
                 .anyMatch(like -> like.getUser().getId().equals(userId));
     }
 
+    public Integer getPostLikeCount(Long postId) {
+        // Validate the post exists
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        // Query the count of likes for the post
+        return likeRepository.countByPostId(postId);
+    }
 
 
     @Override

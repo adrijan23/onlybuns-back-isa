@@ -187,6 +187,17 @@ public class PostController {
         return ResponseEntity.ok(hasLiked);
     }
 
+    @GetMapping("/{postId}/like_count")
+    public ResponseEntity<Long> getPostLikeCount(@PathVariable Long postId) {
+        try {
+            long likeCount = postService.getPostLikeCount(postId); // Efficient query for count
+            return ResponseEntity.ok(likeCount);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 
     @GetMapping("/{postId}/comments")
     public ResponseEntity<List<Comment>> getCommentsByPostId(@PathVariable Long postId) {
