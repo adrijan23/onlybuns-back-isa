@@ -150,6 +150,12 @@ public class UserServiceImpl implements UserService {
 		return userRepository.findAll(pageable);
 	}
 
+	@Scheduled(cron = "59 59 23 L * ?")
+	@Transactional
+	public void deleteDisabledUsers() {
+		userRepository.deleteDisabledUsers();
+	}
+
 	@Transactional
 	public void followUser(Long followerId, Long followingId) {
 		User follower = userRepository.findById(followerId).orElseThrow(() -> new RuntimeException("User not found"));
