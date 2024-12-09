@@ -31,5 +31,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Transactional
     @Query("DELETE FROM User u WHERE u.enabled = false")
     void deleteDisabledUsers();
+
+    @Query("SELECT u FROM User u " +
+            "JOIN u.likes l " +
+            "WHERE l.likedAt > :sevenDaysAgo " +
+            "GROUP BY u " +
+            "ORDER BY COUNT(l) DESC")
+    List<User> findTopLikersInLastSevenDays(LocalDateTime sevenDaysAgo, Pageable pageable);
 }
 

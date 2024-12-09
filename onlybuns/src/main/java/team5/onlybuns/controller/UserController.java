@@ -160,6 +160,16 @@ public class UserController {
 		}
 	}
 
+	@GetMapping("/users/top-likers-weekly")
+	@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+	public ResponseEntity<List<User>> getTopLikersWeekly() {
+		try {
+			List<User> topLikers = userService.getTopLikersWeekly();
+			return ResponseEntity.ok(topLikers);
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+		}
+	}
 
 
 //	@GetMapping("/user/{userId}/followers")

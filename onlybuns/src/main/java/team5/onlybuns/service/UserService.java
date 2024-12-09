@@ -28,4 +28,5 @@ public interface UserService {
     Set<User> getFollowers(Long userId);
 
     Set<User> getFollowing(Long userId);
+    List<User> getTopLikersWeekly();
 }
