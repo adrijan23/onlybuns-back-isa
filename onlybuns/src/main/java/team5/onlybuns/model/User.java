@@ -16,6 +16,8 @@ import javax.persistence.ManyToMany;
 import javax.persistence.*;
 import javax.persistence.Table;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -66,8 +68,11 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user")
     private Set<Comment> comments;
 
-    @ManyToMany(mappedBy = "likes")
-    private Set<Post> likedPosts;
+    @Getter
+    @Setter
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private Set<Like> likes = new HashSet<>();
 
 
     @ManyToMany(fetch = FetchType.EAGER)

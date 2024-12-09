@@ -9,4 +9,24 @@
             <heap unit="entries">100</heap>
         </resources>
     </cache>
+
+    <!-- Cache for weekly top posts -->
+    <cache alias="topPostsWeekly">
+        <expiry>
+            <ttl unit="minutes">30</ttl> <!-- Cache expires in 30 minutes -->
+        </expiry>
+        <resources>
+            <heap unit="entries">10</heap>
+        </resources>
+    </cache>
+
+    <!-- Cache for all-time top posts -->
+    <cache alias="topPostsAllTime">
+        <expiry>
+            <ttl unit="hours">1</ttl> <!-- Cache expires in 1 hour -->
+        </expiry>
+        <resources>
+            <heap unit="entries">10</heap>
+        </resources>
+    </cache>
 </config>

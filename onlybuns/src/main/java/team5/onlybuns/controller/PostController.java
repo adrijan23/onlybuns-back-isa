@@ -18,6 +18,7 @@ import team5.onlybuns.service.PostService;
 import team5.onlybuns.service.UserService;
 
 import javax.validation.Valid;
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -129,10 +130,10 @@ public class PostController {
     }
 
     @PostMapping("/{postId}/like")
-    public ResponseEntity<Post> likePost(@PathVariable Long postId, @RequestParam Long userId) {
+    public ResponseEntity<Post> likePost(@PathVariable Long postId, Principal user) {
         try {
-
-            Post added = postService.addLike(postId, userId);
+            User currentUser = this.userService.findByUsername(user.getName());
+            Post added = postService.addLike(postId, currentUser.getId());
 
             if (added != null) {
                 return ResponseEntity.ok(added);
@@ -146,10 +147,10 @@ public class PostController {
     }
 
     @DeleteMapping("/{postId}/like")
-    public ResponseEntity<Post> unlikePost(@PathVariable Long postId, @RequestParam Long userId) {
+    public ResponseEntity<Post> unlikePost(@PathVariable Long postId, Principal user) {
         try {
-
-            Post removed = postService.removeLike(postId, userId);
+            User currentUser = this.userService.findByUsername(user.getName());
+            Post removed = postService.removeLike(postId, currentUser.getId());
 
             if (removed != null) {
                 return ResponseEntity.ok(removed);
@@ -163,10 +164,10 @@ public class PostController {
     }
 
     @GetMapping("/{postId}/likes")
-    public ResponseEntity<Set<User>> getLikes(@PathVariable Long postId, @RequestParam Long userId) {
+    public ResponseEntity<Set<User>> getLikes(@PathVariable Long postId) {
         try {
 
-            Set<User> likes = postService.getLikes(postId, userId);
+            Set<User> likes = postService.getLikes(postId);
 
             if (likes != null) {
                 return ResponseEntity.ok(likes);
@@ -178,7 +179,26 @@ public class PostController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-      
+
+    @GetMapping("/{postId}/has_liked")
+    public ResponseEntity<Boolean> hasLikedPost(@PathVariable Long postId, Principal user) {
+        User currentUser = this.userService.findByUsername(user.getName());
+        boolean hasLiked = postService.hasUserLikedPost(postId, currentUser.getId());
+        return ResponseEntity.ok(hasLiked);
+    }
+
+    @GetMapping("/{postId}/like_count")
+    public ResponseEntity<Long> getPostLikeCount(@PathVariable Long postId) {
+        try {
+            long likeCount = postService.getPostLikeCount(postId); // Efficient query for count
+            return ResponseEntity.ok(likeCount);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     @GetMapping("/{postId}/comments")
     public ResponseEntity<List<Comment>> getCommentsByPostId(@PathVariable Long postId) {
         List<Comment> comments = commentsService.findCommentsByPostId(postId);
@@ -198,6 +218,31 @@ public class PostController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @GetMapping("/count/total")
+    public ResponseEntity<Integer> getPostCount() {
+        try {
+            Integer count = postService.getPostCount();
+            return ResponseEntity.status(HttpStatus.OK).body(count);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/count/last-month")
+    public Integer getMonthlyPosts() {
+        return postService.getPostsInLastMonth();
+    }
+
+    @GetMapping("/top-weekly")
+    public List<Post> getTopPostsWeekly() {
+        return postService.getTopPostsLast7Days();
+    }
+
+    @GetMapping("/top-all-time")
+    public List<Post> getTopPostsAllTime() {
+        return postService.getTopPostsAllTime();
     }
 
 }
