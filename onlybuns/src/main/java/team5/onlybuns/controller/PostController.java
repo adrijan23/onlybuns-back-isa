@@ -18,6 +18,7 @@ import team5.onlybuns.service.PostService;
 import team5.onlybuns.service.UserService;
 
 import javax.validation.Valid;
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -129,10 +130,10 @@ public class PostController {
     }
 
     @PostMapping("/{postId}/like")
-    public ResponseEntity<Post> likePost(@PathVariable Long postId, @RequestParam Long userId) {
+    public ResponseEntity<Post> likePost(@PathVariable Long postId, Principal user) {
         try {
-
-            Post added = postService.addLike(postId, userId);
+            User currentUser = this.userService.findByUsername(user.getName());
+            Post added = postService.addLike(postId, currentUser.getId());
 
             if (added != null) {
                 return ResponseEntity.ok(added);
@@ -146,10 +147,10 @@ public class PostController {
     }
 
     @DeleteMapping("/{postId}/like")
-    public ResponseEntity<Post> unlikePost(@PathVariable Long postId, @RequestParam Long userId) {
+    public ResponseEntity<Post> unlikePost(@PathVariable Long postId, Principal user) {
         try {
-
-            Post removed = postService.removeLike(postId, userId);
+            User currentUser = this.userService.findByUsername(user.getName());
+            Post removed = postService.removeLike(postId, currentUser.getId());
 
             if (removed != null) {
                 return ResponseEntity.ok(removed);
@@ -163,10 +164,10 @@ public class PostController {
     }
 
     @GetMapping("/{postId}/likes")
-    public ResponseEntity<Set<User>> getLikes(@PathVariable Long postId, @RequestParam Long userId) {
+    public ResponseEntity<Set<User>> getLikes(@PathVariable Long postId) {
         try {
 
-            Set<User> likes = postService.getLikes(postId, userId);
+            Set<User> likes = postService.getLikes(postId);
 
             if (likes != null) {
                 return ResponseEntity.ok(likes);
@@ -178,7 +179,15 @@ public class PostController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-      
+
+    @GetMapping("/{postId}/has_liked")
+    public ResponseEntity<Boolean> hasLikedPost(@PathVariable Long postId, Principal user) {
+        User currentUser = this.userService.findByUsername(user.getName());
+        boolean hasLiked = postService.hasUserLikedPost(postId, currentUser.getId());
+        return ResponseEntity.ok(hasLiked);
+    }
+
+
     @GetMapping("/{postId}/comments")
     public ResponseEntity<List<Comment>> getCommentsByPostId(@PathVariable Long postId) {
         List<Comment> comments = commentsService.findCommentsByPostId(postId);
