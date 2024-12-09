@@ -184,30 +184,10 @@ public class UserServiceImpl implements UserService {
 		return user.getFollowing();
 	}
 
-//	public void follow(Long userId, Long targetUserId) {
-//		User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-//		User targetUser = userRepository.findById(targetUserId).orElseThrow(() -> new RuntimeException("User not found"));
-//
-//		user.getFollowing().add(targetUser);
-//		userRepository.save(user);
-//	}
-//
-//	public void unfollow(Long userId, Long targetUserId) {
-//		User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-//		User targetUser = userRepository.findById(targetUserId).orElseThrow(() -> new RuntimeException("User not found"));
-//
-//		user.getFollowing().remove(targetUser);
-//		userRepository.save(user);
-//	}
-//
-//	public Set<User> getFollowers(Long userId) {
-//		User user = userRepository.findById(userId).orElseThrow();
-//		return user.getFollowers();
-//	}
-//
-//	public Set<User> getFollowing(Long userId) {
-//		User user = userRepository.findById(userId).orElseThrow();
-//		return user.getFollowing();
-//	}
+	public List<User> getTopLikersWeekly() {
+		LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+		PageRequest pageRequest = PageRequest.of(0, 10); // Limit to top 10
+		return userRepository.findTopLikersInLastSevenDays(sevenDaysAgo, pageRequest);
+	}
 
 }
