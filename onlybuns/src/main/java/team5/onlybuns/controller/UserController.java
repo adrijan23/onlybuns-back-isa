@@ -171,39 +171,42 @@ public class UserController {
 		}
 	}
 
+	@PutMapping("/user/{userId}/update-password")
+	@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+	public ResponseEntity<?> updatePassword(
+			@PathVariable Long userId,
+			@RequestBody Map<String, String> passwordRequest,
+			Principal principal) {
+		try {
+			// Get the current user making the request
+			User currentUser = this.userService.findByUsername(principal.getName());
 
-//	@GetMapping("/user/{userId}/followers")
-//	public ResponseEntity<Set<User>> getFollowers(@PathVariable Long userId) {
-//		Set<User> followers = userService.getFollowers(userId);
-//		return ResponseEntity.ok(followers);
-//	}
-//
-//	@GetMapping("/user/{userId}/following")
-//	public ResponseEntity<Set<User>> getFollowing(@PathVariable Long userId) {
-//		Set<User> following = userService.getFollowing(userId);
-//		return ResponseEntity.ok(following);
-//	}
-//
-//	@PostMapping("/user/{userId}/follow")
-//	public ResponseEntity<String> follow(@PathVariable Long userId, @RequestParam Long targetId) {
-//		try {
-//			userService.follow(userId, targetId);
-//			return ResponseEntity.ok("User followed successfully.");
-//
-//		} catch (Exception e) {
-//			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-//		}
-//	}
-//
-//	@PostMapping("/user/{userId}/unfollow")
-//	public ResponseEntity<String> unfollow(@PathVariable Long userId, @RequestParam Long targetId) {
-//		try {
-//			userService.follow(userId, targetId);
-//			return ResponseEntity.ok("User followed successfully.");
-//
-//		} catch (Exception e) {
-//			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-//		}
-//	}
+			// Check if the user is authorized to update the password
+			if (!currentUser.getId().equals(userId)) {
+				return ResponseEntity.status(HttpStatus.FORBIDDEN)
+						.body("You can only update your own password");
+			}
+
+			// Extract passwords from the request
+			String currentPassword = passwordRequest.get("currentPassword");
+			String newPassword = passwordRequest.get("newPassword");
+
+			// Validate that the current password matches
+			if (!userService.checkPassword(currentPassword, currentUser.getPassword())) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body("Current password is incorrect");
+			}
+
+			// Encode and update the new password
+			userService.updatePassword(currentUser.getId(), newPassword);
+
+			return ResponseEntity.ok("Password updated successfully");
+
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("Failed to update password: " + e.getMessage());
+		}
+	}
+
 
 }

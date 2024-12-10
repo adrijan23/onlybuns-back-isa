@@ -74,7 +74,8 @@ public class WebSecurityConfig {
 		http.authorizeRequests().antMatchers("/auth/**").permitAll()
 			.antMatchers(HttpMethod.GET, "/api/posts").permitAll()
 			.antMatchers(HttpMethod.GET, "/api/posts/{postId}/comments").permitAll()
-				.antMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+			.antMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+			.antMatchers(HttpMethod.GET, "/api/posts/{postId}/like_count").permitAll()
 			.anyRequest().authenticated().and()
 			.cors().and()
 			.addFilterBefore(new TokenAuthenticationFilter(tokenUtils,  userDetailsService()), BasicAuthenticationFilter.class);
