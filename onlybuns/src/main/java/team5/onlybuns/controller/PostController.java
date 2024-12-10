@@ -245,4 +245,9 @@ public class PostController {
         return postService.getTopPostsAllTime();
     }
 
+    @GetMapping("/{postId}/comment-count")
+    public Integer getCommentsCount(@PathVariable Long postId) {
+        return commentsService.countByPostId(postId);
+    }
+
 }

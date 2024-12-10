@@ -8,4 +8,6 @@ import java.util.List;
 public interface CommentsService {
     List<Comment> findCommentsByPostId(Long postId);
     public Comment createComment(String content, Long postId, Long userId) throws IOException;
+
+    Integer countByPostId(Long postId);
 }
