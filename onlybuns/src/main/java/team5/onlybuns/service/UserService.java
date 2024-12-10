@@ -29,4 +29,6 @@ public interface UserService {
 
     Set<User> getFollowing(Long userId);
     List<User> getTopLikersWeekly();
+    boolean checkPassword(String rawPassword, String encodedPassword);
+    void updatePassword(Long userId, String newPassword);
 }

@@ -190,4 +190,14 @@ public class UserServiceImpl implements UserService {
 		return userRepository.findTopLikersInLastSevenDays(sevenDaysAgo, pageRequest);
 	}
 
+	public boolean checkPassword(String rawPassword, String encodedPassword) {
+		return passwordEncoder.matches(rawPassword, encodedPassword);
+	}
+
+	public void updatePassword(Long userId, String newPassword) {
+		User user = findById(userId); // Fetch the user by ID
+		user.setPassword(passwordEncoder.encode(newPassword)); // Encode the new password
+		userRepository.save(user); // Save the updated user
+	}
+
 }
