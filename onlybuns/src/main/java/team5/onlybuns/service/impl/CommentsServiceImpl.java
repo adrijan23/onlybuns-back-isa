@@ -71,4 +71,9 @@ public class CommentsServiceImpl implements CommentsService {
             throw new RuntimeException("Comment not found");
         }
     }
+
+    @Override
+    public Integer countByPostId(Long postId){
+        return commentsRepository.countByPostId(postId);
+    }
 }

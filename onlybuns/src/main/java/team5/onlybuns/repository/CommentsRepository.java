@@ -10,4 +10,6 @@ import java.util.List;
 public interface CommentsRepository extends JpaRepository<Comment, Long> {
     @Query(value = "SELECT * FROM COMMENTS WHERE post_id = :postId", nativeQuery = true)
     List<Comment> findCommentsByPostId(@Param("postId") Long postId);
+
+    Integer countByPostId(Long postId);
 }
