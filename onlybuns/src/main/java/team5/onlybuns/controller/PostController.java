@@ -1,6 +1,7 @@
 package team5.onlybuns.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +40,9 @@ public class PostController {
 
     @Autowired
     private CommentsService commentsService;
+
+    @Value("${commentsPerHourLimit}")
+    private Long commentsPerHourLimit;
 
     public static final String UPLOAD_DIR = "uploads/";
 
@@ -211,8 +215,18 @@ public class PostController {
     }
 
     @PostMapping("/{postId}/comments")
-    public ResponseEntity<Comment> addComment(@PathVariable Long postId, @RequestBody CommentRequest comment) {
+    public ResponseEntity<?> addComment(@PathVariable Long postId, @RequestBody CommentRequest comment) {
         try {
+            User userCommenting = userService.findById(comment.getUserId());
+            User userPosted = postService.getPost(postId).getUser();
+            Set<User> userFollowing = userService.getFollowing(userCommenting.getId());
+            Long a = commentsService.findCommentsCountFromLastHourForUser(userCommenting.getId());
+            if (!(userFollowing.contains(userPosted))) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You must follow the post owner to comment.");
+            } else if(commentsService.findCommentsCountFromLastHourForUser(userCommenting.getId()) > commentsPerHourLimit - 1) {
+                return ResponseEntity.status(429).body("You've exceeded limit of " + commentsPerHourLimit + " comments per hour.");
+            }
+
             Comment createdComment = commentsService.createComment(comment.getContent(), postId, comment.getUserId());
             return ResponseEntity.status(HttpStatus.CREATED).body(createdComment);
         } catch (Exception e) {

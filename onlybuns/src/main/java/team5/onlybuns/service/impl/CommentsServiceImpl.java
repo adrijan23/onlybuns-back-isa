@@ -52,6 +52,11 @@ public class CommentsServiceImpl implements CommentsService {
         return commentsRepository.save(comment);
     }
 
+    @Override
+    public Long findCommentsCountFromLastHourForUser(Long userId) {
+        return commentsRepository.findCommentsCountFromLastHourForUser(userId);
+    }
+
     public Comment updateComment(Long commentId, String newContent) {
         Optional<Comment> existingComment = commentsRepository.findById(commentId);
 

@@ -11,5 +11,7 @@ public interface CommentsRepository extends JpaRepository<Comment, Long> {
     @Query(value = "SELECT * FROM COMMENTS WHERE post_id = :postId", nativeQuery = true)
     List<Comment> findCommentsByPostId(@Param("postId") Long postId);
 
+    @Query(value = "SELECT COALESCE((SELECT COUNT(*) FROM COMMENTS WHERE user_id = :userId AND created_at >= (NOW() - INTERVAL '1 hour')), 0)", nativeQuery = true)
+    Long findCommentsCountFromLastHourForUser(@Param("userId") Long userId);
     Integer countByPostId(Long postId);
 }

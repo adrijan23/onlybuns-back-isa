@@ -9,5 +9,6 @@ public interface CommentsService {
     List<Comment> findCommentsByPostId(Long postId);
     public Comment createComment(String content, Long postId, Long userId) throws IOException;
 
+    public Long findCommentsCountFromLastHourForUser(Long userId);
     Integer countByPostId(Long postId);
 }
