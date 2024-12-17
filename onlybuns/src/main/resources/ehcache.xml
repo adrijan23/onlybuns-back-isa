@@ -29,4 +29,11 @@
             <heap unit="entries">10</heap>
         </resources>
     </cache>
+
+    <cache alias="followLimitCache">
+        <expiry>
+            <ttl unit="seconds">60</ttl>
+        </expiry>
+        <heap unit="entries">1000</heap> <!-- Max 1000 users tracked simultaneously -->
+    </cache>
 </config>

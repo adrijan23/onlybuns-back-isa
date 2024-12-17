@@ -3,7 +3,11 @@ package team5.onlybuns;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import team5.onlybuns.dto.UserRequest;
 import team5.onlybuns.model.User;
 import team5.onlybuns.service.UserService;
@@ -21,6 +25,9 @@ public class UserServiceTests {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private CacheManager cacheManager;
 
     @Test
     void testConcurrentUserRegistration() {
@@ -71,39 +78,16 @@ public class UserServiceTests {
     @Test
     void testConcurrentFollowSameUser() throws Exception {
         // Step 1: two followers and one following user
-        UserRequest user1 = new UserRequest();
-        user1.setUsername("follower1");
-        user1.setPassword("password1");
-        user1.setFirstname("John");
-        user1.setLastname("Doe");
-        user1.setEmail("testf1@example.com");
-        userService.save(user1);
-        User follower1 = userService.findByUsername(user1.getUsername());
-
-        UserRequest user2 = new UserRequest();
-        user2.setUsername("follower2");
-        user2.setPassword("password1");
-        user2.setFirstname("John");
-        user2.setLastname("Doe");
-        user2.setEmail("testf1@example.com");
-        userService.save(user2);
-        User follower2 = userService.findByUsername(user2.getUsername());
-
-        UserRequest user3 = new UserRequest();
-        user3.setUsername("following");
-        user3.setPassword("password1");
-        user3.setFirstname("John");
-        user3.setLastname("Doe");
-        user3.setEmail("testf@example.com");
-        userService.save(user3);
-        User following = userService.findByUsername(user3.getUsername());
+        User follower1 = userService.findByIdWithFollowing(3L);
+        User follower2 = userService.findByIdWithFollowing(2L);
+        User followingUser = userService.findByIdWithFollowing(4L);
 
         ExecutorService executor = Executors.newFixedThreadPool(2);
 
         // Step 2: both trying to follow the same user (following)
         Future<?> future1 = executor.submit(() -> {
             try {
-                userService.followUser(follower1.getId(), following.getId());
+                userService.followUser(follower1.getId(), followingUser.getId());
             } catch (RuntimeException e) {
                 throw new RuntimeException("First follower failed to follow", e);
             }
@@ -112,35 +96,60 @@ public class UserServiceTests {
         Future<?> future2 = executor.submit(() -> {
             try {
                 Thread.sleep(100);
-                userService.followUser(follower2.getId(), following.getId());
+                userService.followUser(follower2.getId(), followingUser.getId());
             } catch (RuntimeException | InterruptedException e) {
                 throw new RuntimeException("Second follower failed to follow", e);
             }
         });
         // there wont be any conflicts because of the structure of the database
 
-        // both operations should complete without exceptions
-        future1.get();  // wait for both tasks to complete
+        future1.get();
         future2.get();
 
-//        // Step 3: both followers have successfully followed the same user
-//        User updatedFollower1 = userService.findByIdWithFollowing(follower1.getId());
-//        User updatedFollower2 = userService.findByIdWithFollowing(follower2.getId());
-//        User updatedFollowing = userService.findByIdWithFollowing(following.getId());
-//
-//        // follower1 is following 'following'
-//        assertTrue(updatedFollower1.getFollowing().contains(updatedFollowing));
-//        // follower2 is following 'following'
-//        assertTrue(updatedFollower2.getFollowing().contains(updatedFollowing));
-//
-//        // 'following' has two followers: follower1 and follower2
-//        assertTrue(updatedFollowing.getFollowers().contains(updatedFollower1));
-//        assertTrue(updatedFollowing.getFollowers().contains(updatedFollower2));
+        // updated data
+        User updatedFollower1 = userService.findByIdWithFollowing(follower1.getId());
+        User updatedFollower2 = userService.findByIdWithFollowing(follower2.getId());
+        User updatedFollowing = userService.findByIdWithFollowing(followingUser.getId());
+
+        // follower1 is following 'following'
+        assertTrue(updatedFollower1.getFollowing().contains(updatedFollowing));
+        // follower2 is following 'following'
+        assertTrue(updatedFollower2.getFollowing().contains(updatedFollowing));
+
+        // 'following' has two followers: follower1 and follower2
+        assertTrue(updatedFollowing.getFollowers().contains(updatedFollower1));
+        assertTrue(updatedFollowing.getFollowers().contains(updatedFollower2));
 
         executor.shutdown();
     }
 
+    @Test
+    @Transactional
+    void testFollowRateLimit() {
+        Long followerId = 1L;
+        Long followingId = 2L;
 
+        int maxFollowsPerMinute = 5;
+
+        Cache cache = cacheManager.getCache("followLimitCache");
+        cache.clear();
+
+        for (int i = 0; i < maxFollowsPerMinute; i++) {
+            userService.followUser(followerId, followingId);
+        }
+
+        //no exceptions for other followings
+        assertDoesNotThrow(() -> {
+            userService.followUser(followingId, followerId);
+        });
+
+        Throwable thrown = assertThrows(ResponseStatusException.class, () -> {
+            userService.followUser(followerId, followingId);
+        });
+
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS, ((ResponseStatusException) thrown).getStatus());
+        assertTrue(thrown.getMessage().contains("You have exceeded the follow limit"));
+    }
 
 
 }

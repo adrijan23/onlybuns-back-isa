@@ -5,8 +5,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import team5.onlybuns.dto.UserRequest;
 import team5.onlybuns.model.Role;
 import team5.onlybuns.model.User;
@@ -42,6 +47,10 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	private EmailServiceImpl emailService;
+
+	@Autowired
+	private CacheManager cacheManager;
+	private static final int MAX_FOLLOWS_PER_MINUTE = 5;
 
 	@Transactional
 	@Override
@@ -169,23 +178,39 @@ public class UserServiceImpl implements UserService {
 		userRepository.deleteDisabledUsers();
 	}
 
-	@Transactional
+	//@RateLimiter(name = "standard", fallbackMethod = "rateLimitFallback") // resilience4j
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public void followUser(Long followerId, Long followingId) {
 		try {
+			Cache cache = cacheManager.getCache("followLimitCache");
+
+			// Retrieve the current count of follows from the cache
+			Integer followCount = cache.get(followerId, Integer.class);
+
+			if (followCount == null) {
+				// First follow in this minute
+				cache.put(followerId, 1);
+			} else if (followCount < MAX_FOLLOWS_PER_MINUTE) {
+				// Increment the follow count
+				cache.put(followerId, followCount + 1);
+			} else {
+				throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "You have exceeded the follow limit of " + MAX_FOLLOWS_PER_MINUTE + " per minute.");
+			}
 			User follower = userRepository.findById(followerId)
 					.orElseThrow(() -> new RuntimeException("User not found"));
 			User following = userRepository.findById(followingId)
 					.orElseThrow(() -> new RuntimeException("User not found"));
 
-			//System.out.println("Version before: " + follower.getVersion());
 			follower.getFollowing().add(following);
 			userRepository.save(follower);
-			//System.out.println("Version after: " + follower.getVersion());
 		} catch (OptimisticLockException e) {
 			throw new RuntimeException("Failed to follow the user due to a concurrent update. Please try again.");
 		}
 	}
-
+	// za resilience4j RateLimiter
+//	public void rateLimitFallback(Long followerId, Long followingId, Throwable t) {
+//		throw new RuntimeException("Rate limit exceeded. Try again later.");
+//	}
 
 	@Transactional
 	public void unfollowUser(Long followerId, Long followingId) {
