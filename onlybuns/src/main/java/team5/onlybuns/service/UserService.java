@@ -22,6 +22,7 @@ public interface UserService {
 //    void follow(Long userId, Long targetId);
 //    void unfollow(Long userId, Long targetId);
     void followUser(Long followerId, Long followingId);
+    User findByIdWithFollowing(Long id);
 
     void unfollowUser(Long followerId, Long followingId);
 

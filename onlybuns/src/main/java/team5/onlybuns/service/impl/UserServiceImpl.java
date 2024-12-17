@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.data.domain.Page;
@@ -24,6 +25,7 @@ import team5.onlybuns.repository.UserRepository;
 import team5.onlybuns.service.RoleService;
 import team5.onlybuns.service.UserService;
 
+import javax.persistence.EntityNotFoundException;
 import javax.persistence.OptimisticLockException;
 
 @Service
@@ -55,6 +57,15 @@ public class UserServiceImpl implements UserService {
 
 	public User findById(Long id) throws AccessDeniedException {
 		return userRepository.findById(id).orElseGet(null);
+	}
+
+	public User findByIdWithFollowing(Long id) {
+		User user = userRepository.findById(id)
+				.orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+		// Force initialization of lazy collections
+		user.setFollowing(user.getFollowing());
+		return user;
 	}
 
 	public List<User> findAll() throws AccessDeniedException {
@@ -166,8 +177,10 @@ public class UserServiceImpl implements UserService {
 			User following = userRepository.findById(followingId)
 					.orElseThrow(() -> new RuntimeException("User not found"));
 
+			//System.out.println("Version before: " + follower.getVersion());
 			follower.getFollowing().add(following);
 			userRepository.save(follower);
+			//System.out.println("Version after: " + follower.getVersion());
 		} catch (OptimisticLockException e) {
 			throw new RuntimeException("Failed to follow the user due to a concurrent update. Please try again.");
 		}
