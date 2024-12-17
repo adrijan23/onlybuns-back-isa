@@ -51,6 +51,10 @@ public class User implements UserDetails {
     @Column(name = "email")
     private String email;
 
+    @Version
+    @Column(name = "version")
+    private Long version;
+
     @Column(name = "enabled")
     private boolean enabled;
 
@@ -108,6 +112,14 @@ public class User implements UserDetails {
 
     public void setFollowers(Set<User> followers) {
         this.followers = followers;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
 

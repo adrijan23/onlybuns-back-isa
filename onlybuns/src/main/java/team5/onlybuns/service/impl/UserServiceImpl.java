@@ -24,6 +24,8 @@ import team5.onlybuns.repository.UserRepository;
 import team5.onlybuns.service.RoleService;
 import team5.onlybuns.service.UserService;
 
+import javax.persistence.OptimisticLockException;
+
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -158,20 +160,33 @@ public class UserServiceImpl implements UserService {
 
 	@Transactional
 	public void followUser(Long followerId, Long followingId) {
-		User follower = userRepository.findById(followerId).orElseThrow(() -> new RuntimeException("User not found"));
-		User following = userRepository.findById(followingId).orElseThrow(() -> new RuntimeException("User not found"));
+		try {
+			User follower = userRepository.findById(followerId)
+					.orElseThrow(() -> new RuntimeException("User not found"));
+			User following = userRepository.findById(followingId)
+					.orElseThrow(() -> new RuntimeException("User not found"));
 
-		follower.getFollowing().add(following);
-		userRepository.save(follower);
+			follower.getFollowing().add(following);
+			userRepository.save(follower);
+		} catch (OptimisticLockException e) {
+			throw new RuntimeException("Failed to follow the user due to a concurrent update. Please try again.");
+		}
 	}
+
 
 	@Transactional
 	public void unfollowUser(Long followerId, Long followingId) {
-		User follower = userRepository.findById(followerId).orElseThrow(() -> new RuntimeException("User not found"));
-		User following = userRepository.findById(followingId).orElseThrow(() -> new RuntimeException("User not found"));
+		try{
+			User follower = userRepository.findById(followerId)
+					.orElseThrow(() -> new RuntimeException("User not found"));
+			User following = userRepository.findById(followingId)
+					.orElseThrow(() -> new RuntimeException("User not found"));
 
-		follower.getFollowing().remove(following);
-		userRepository.save(follower);
+			follower.getFollowing().remove(following);
+			userRepository.save(follower);
+		}catch (OptimisticLockException e){
+			throw new RuntimeException("Failed to follow the user due to a concurrent update. Please try again.");
+		}
 	}
 
 	public Set<User> getFollowers(Long userId) {
