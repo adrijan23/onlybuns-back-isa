@@ -72,6 +72,7 @@ public class WebSecurityConfig {
 
         http.exceptionHandling().authenticationEntryPoint(restAuthenticationEntryPoint);
 		http.authorizeRequests().antMatchers("/auth/**").permitAll()
+				.antMatchers("/actuator/**").permitAll()
 			.antMatchers(HttpMethod.GET, "/api/posts").permitAll()
 			.antMatchers(HttpMethod.GET, "/api/posts/{postId}/comments").permitAll()
 			.antMatchers(HttpMethod.GET, "/uploads/**").permitAll()
