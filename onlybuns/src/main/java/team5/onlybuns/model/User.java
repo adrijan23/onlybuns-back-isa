@@ -51,6 +51,10 @@ public class User implements UserDetails {
     @Column(name = "email")
     private String email;
 
+    @Version
+    @Column(name = "version")
+    private Long version;
+
     @Column(name = "enabled")
     private boolean enabled;
 
@@ -81,7 +85,7 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     private List<Role> roles;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER) // treba vratiti na LAZY
     @JoinTable(
             name = "user_following", // Join table name
             joinColumns = @JoinColumn(name = "follower_id", referencedColumnName = "id"), // Foreign key for the user who is following
@@ -90,7 +94,7 @@ public class User implements UserDetails {
     @JsonIgnore // Prevent serialization by default
     private Set<User> following = new HashSet<>();
 
-    @ManyToMany(mappedBy = "following", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "following", fetch = FetchType.EAGER) // zbog pristupa u testovima je EAGER ~Zeka
     @JsonIgnore // To prevent infinite recursion during serialization
     private Set<User> followers = new HashSet<>();
 
@@ -108,6 +112,14 @@ public class User implements UserDetails {
 
     public void setFollowers(Set<User> followers) {
         this.followers = followers;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
 
