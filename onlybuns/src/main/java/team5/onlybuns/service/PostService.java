@@ -1,5 +1,6 @@
 package team5.onlybuns.service;
 
+import org.springframework.data.repository.query.Param;
 import org.springframework.web.multipart.MultipartFile;
 import team5.onlybuns.model.Post;
 import team5.onlybuns.model.User;
@@ -30,4 +31,9 @@ public interface PostService {
     List<Post> getTopPostsLast7Days();
     boolean hasUserLikedPost(Long postId, Long userId);
     Integer getPostLikeCount(Long postId);
+    List<Post> findByYear(Integer year);
+    List<Integer> getAvailableYears();
+    List<Integer> getAvailableMonths(Integer year);
+    List<Object[]> getPerMonth(Integer year);
+    List<Object[]> getPerDay(Integer year, Integer month);
 }

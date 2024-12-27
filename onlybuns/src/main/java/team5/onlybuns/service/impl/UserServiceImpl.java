@@ -253,4 +253,19 @@ public class UserServiceImpl implements UserService {
 		userRepository.save(user); // Save the updated user
 	}
 
+	@Override
+	public Double getPostedPercentage() {
+		return userRepository.getUsersPostedPercentage();
+	}
+
+	@Override
+	public Double getOnlyCommentedPercentage() {
+		return userRepository.getUsersOnlyCommentedPercentage();
+	}
+
+	@Override
+	public Double getNoPostOrCommentPercentage() {
+		return userRepository.getUsersWithNoPostsOrCommentsPercentage();
+	}
+
 }

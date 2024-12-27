@@ -208,5 +208,20 @@ public class UserController {
 		}
 	}
 
+	@GetMapping("/analytics/posts")
+	@PreAuthorize("hasRole('ADMIN')")
+	public Double getPostPercent() {
+		return this.userService.getPostedPercentage();
+	}
 
+	@GetMapping("/analytics/comments")
+	@PreAuthorize("hasRole('ADMIN')")
+	public Double getOnlyCommentPercent() {
+		return this.userService.getOnlyCommentedPercentage();
+	}
+	@GetMapping("/analytics/no-action")
+	@PreAuthorize("hasRole('ADMIN')")
+	public Double getNoActionPercent() {
+		return this.userService.getNoPostOrCommentPercentage();
+	}
 }

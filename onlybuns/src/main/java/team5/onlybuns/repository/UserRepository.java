@@ -38,5 +38,29 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "GROUP BY u " +
             "ORDER BY COUNT(l) DESC")
     List<User> findTopLikersInLastSevenDays(LocalDateTime sevenDaysAgo, Pageable pageable);
+
+    @Query(value = "SELECT (COUNT(DISTINCT p.user_id) * 100.0 / COUNT(DISTINCT u.id)) AS userPostPercentage " +
+            "FROM users u " +
+            "LEFT JOIN posts p ON u.id = p.user_id", nativeQuery = true)
+    Double getUsersPostedPercentage();
+
+    @Query(value = "SELECT " +
+            "(COUNT(DISTINCT u.id) * 100.0 / (SELECT COUNT(*) FROM users)) AS percentage_only_commented " +
+            "FROM users u " +
+            "LEFT JOIN posts p ON u.id = p.user_id " +
+            "JOIN comments c ON u.id = c.user_id " +
+            "WHERE p.user_id IS NULL", nativeQuery = true)
+    Double getUsersOnlyCommentedPercentage();
+
+    //if needed users - u.* instead of percentage_...
+    @Query(value = "SELECT " +
+            "(COUNT(DISTINCT u.id) * 100.0 / (SELECT COUNT(*) FROM users)) AS percentage_no_posts_no_comments " +
+            "FROM users u " +
+            "LEFT JOIN posts p ON u.id = p.user_id " +
+            "LEFT JOIN comments c ON u.id = c.user_id " +
+            "WHERE p.user_id IS NULL AND c.user_id IS NULL", nativeQuery = true)
+    Double getUsersWithNoPostsOrCommentsPercentage();
+
+
 }
 

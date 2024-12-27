@@ -21,20 +21,20 @@ INSERT INTO USER_ROLE (user_id, role_id) VALUES (4, 1); -- user-u dodeljujemo ro
 INSERT INTO USER_ROLE (user_id, role_id) VALUES (5, 1); -- user-u dodeljujemo rolu USER
 INSERT INTO USER_ROLE (user_id, role_id) VALUES (6, 1); -- user-u dodeljujemo rolu USER
 
-INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('123 Elm Street, Springfield', '2023-11-09 14:30:00', 'Beautiful sunset view', 'uploads\1_rabbit.jpg', 37.7749, -122.4194, 1);
-INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('456 Maple Avenue, Metropolis', '2024-11-09 15:45:00', 'Cute rabbit in the park', 'uploads\2_rabbit.jpg', 40.7128, -74.0060, 2);
-INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('789 Pine Road, Gotham', '2024-11-09 16:00:00', 'Amazing mountain hike', 'uploads\3_rabbit.jpg', 34.0522, -118.2437, 1);
-INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('101 Oak Street, Springfield', '2024-11-25 10:00:00', 'Lovely garden with flowers', 'uploads\4_rabbit.jpg', 37.7749, -122.4194, 1);
+INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('123 Elm Street, Springfield', '2023-10-09 14:30:00', 'Beautiful sunset view', 'uploads\1_rabbit.jpg', 37.7749, -122.4194, 1);
+INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('456 Maple Avenue, Metropolis', '2023-12-09 15:45:00', 'Cute rabbit in the park', 'uploads\2_rabbit.jpg', 40.7128, -74.0060, 2);
+INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('789 Pine Road, Gotham', '2024-10-09 16:00:00', 'Amazing mountain hike', 'uploads\3_rabbit.jpg', 34.0522, -118.2437, 1);
+INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('101 Oak Street, Springfield', '2024-10-25 10:00:00', 'Lovely garden with flowers', 'uploads\4_rabbit.jpg', 37.7749, -122.4194, 1);
 
-INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('202 Birch Lane, Metropolis', '2024-11-27 12:30:00', 'Sunny day at the park', 'uploads\5_rabbit.jpg', 40.7128, -74.0060, 2);
+INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('202 Birch Lane, Metropolis', '2024-12-27 12:30:00', 'Sunny day at the park', 'uploads\5_rabbit.jpg', 40.7128, -74.0060, 2);
 
 INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('303 Cedar Way, Gotham', '2024-11-28 14:45:00', 'Snowy mountain retreat', 'uploads\6_rabbit.jpg', 34.0522, -118.2437, 1);
 
-INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('404 Elm Avenue, Springfield', '2024-11-29 11:15:00', 'Stunning city skyline', 'uploads\7_rabbit.jpg', 37.7749, -122.4194, 3);
+INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('404 Elm Avenue, Springfield', '2024-05-29 11:15:00', 'Stunning city skyline', 'uploads\7_rabbit.jpg', 37.7749, -122.4194, 3);
 
-INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('505 Pine Boulevard, Metropolis', '2024-11-30 09:30:00', 'Beautiful beach sunset', 'uploads\8_rabbit.jpg', 40.7128, -74.0060, 2);
+INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('505 Pine Boulevard, Metropolis', '2024-01-30 09:30:00', 'Beautiful beach sunset', 'uploads\8_rabbit.jpg', 40.7128, -74.0060, 2);
 
-INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('606 Maple Lane, Gotham', '2024-11-26 16:20:00', 'Relaxing forest walk', 'uploads\9_rabbit.jpg', 34.0522, -118.2437, 4);
+INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('606 Maple Lane, Gotham', '2024-01-26 16:20:00', 'Relaxing forest walk', 'uploads\9_rabbit.jpg', 34.0522, -118.2437, 4);
 
 INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('707 Birch Street, Springfield', '2024-11-25 18:10:00', 'Bright flowers blooming', 'uploads\10_rabbit.jpg', 37.7749, -122.4194, 1);
 
@@ -46,8 +46,12 @@ INSERT INTO POSTS (address, created_at, description, image_path, latitude, longi
 
 
 INSERT INTO COMMENTS (content, created_at, user_id, post_id) VALUES ('Wow, this view is stunning!', '2024-11-09 15:00:00', 2, 1);
-INSERT INTO COMMENTS (content, created_at, user_id, post_id) VALUES ('Aww, the rabbit is adorable!', '2024-11-09 16:00:00', 1, 2);
+INSERT INTO COMMENTS (content, created_at, user_id, post_id) VALUES ('Aww, the rabbit is adorable!', '2024-11-08 16:00:00', 1, 2);
 INSERT INTO COMMENTS (content, created_at, user_id, post_id) VALUES ('Looks like a great hike; I should try it!', '2024-11-09 17:00:00', 2, 3);
-INSERT INTO COMMENTS (content, created_at, user_id, post_id) VALUES ('This view is totally worth the climb!', '2024-11-09 17:45:00', 1, 3);
+INSERT INTO COMMENTS (content, created_at, user_id, post_id) VALUES ('This view is totally worth the climb!', '2024-12-09 17:45:00', 4, 4);
+INSERT INTO COMMENTS (content, created_at, user_id, post_id) VALUES ('This view is totally worth the climb!', '2024-10-09 17:45:00', 6, 5);
+INSERT INTO COMMENTS (content, created_at, user_id, post_id) VALUES ('This view is totally worth the climb!', '2024-08-01 17:45:00', 5, 6);
+INSERT INTO COMMENTS (content, created_at, user_id, post_id) VALUES ('This view is totally worth the climb!', '2024-08-09 17:45:00', 5, 7);
+INSERT INTO COMMENTS (content, created_at, user_id, post_id) VALUES ('This view is totally worth the climb!', '2024-01-09 17:45:00', 3, 8);
 
 INSERT INTO POST_LIKES (liked_at, post_id, user_id) VALUES ('2024-11-09 15:00:00', 1, 2);
