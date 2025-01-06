@@ -51,6 +51,10 @@ public class User implements UserDetails {
     @Column(name = "email")
     private String email;
 
+    @ManyToOne
+    @JoinColumn(name = "address_id", referencedColumnName = "id")
+    private Address address;
+
     @Version
     @Column(name = "version")
     private Long version;
@@ -193,6 +197,14 @@ public class User implements UserDetails {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
     }
 
     @Override
