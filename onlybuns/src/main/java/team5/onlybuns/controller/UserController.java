@@ -16,8 +16,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.web.multipart.MultipartFile;
+import team5.onlybuns.model.Address;
 import team5.onlybuns.model.Post;
 import team5.onlybuns.model.User;
+import team5.onlybuns.repository.AddressRepository;
 import team5.onlybuns.repository.ImageRepository;
 import team5.onlybuns.service.UserService;
 
@@ -37,6 +39,9 @@ public class UserController {
 
 	@Autowired
 	private ImageRepository imageRepository;
+
+	@Autowired
+	private AddressRepository addressRepository;
 
 
 	@GetMapping("/user/{userId}")
@@ -209,4 +214,40 @@ public class UserController {
 	}
 
 
+	@PutMapping("/user/{userId}/update-address")
+	@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+	public ResponseEntity<?> updateAddress(@PathVariable Long userId, @RequestBody Address address) {
+		// Fetch the user by userId
+		User user = userService.findById(userId);
+		if (user == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+
+
+		// Check if an address with the same street and number already exists
+		Address existingAddress = addressRepository.findByStreetAndStreetNumber(
+				address.getStreet(), address.getStreetNumber());
+
+		if (existingAddress != null) {
+			user.setAddress(existingAddress);
+		} else {
+			Address savedAddress = addressRepository.save(address);
+			user.setAddress(savedAddress);
+		}
+
+		// Save the updated user
+		userService.update(user);
+
+		return ResponseEntity.ok("Address updated successfully.");
+	}
+
+	@GetMapping("/user/{userId}/address")
+	@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+	public ResponseEntity<?> getAddress (@PathVariable Long userId) {
+		User user = userService.findById(userId);
+		if (user == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+
+		Address address = user.getAddress();
+		if (address == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Address not found");
+
+		return ResponseEntity.ok(address);
+	}
 }
