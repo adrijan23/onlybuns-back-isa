@@ -38,5 +38,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "GROUP BY u " +
             "ORDER BY COUNT(l) DESC")
     List<User> findTopLikersInLastSevenDays(LocalDateTime sevenDaysAgo, Pageable pageable);
+
+    @Query("SELECT u.username FROM User u")
+    List<String> findAllUsernames();
 }
 
