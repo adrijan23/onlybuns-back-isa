@@ -3,6 +3,7 @@ package team5.onlybuns.controller;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.hash.BloomFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -16,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import team5.onlybuns.config.BloomFilterConfig;
 import team5.onlybuns.dto.JwtAuthenticationRequest;
 import team5.onlybuns.dto.UserRequest;
 import team5.onlybuns.dto.UserTokenState;
@@ -46,6 +48,9 @@ public class AuthenticationController {
 
 	@Autowired
 	private CacheManager cacheManager; // EhCache Cache Manager
+
+	@Autowired
+	private BloomFilterConfig bloomFilterConfig;
 
 	private static final int MAX_ATTEMPTS = 5; // Maksimalan broj pokušaja logina po IP adresi
 
@@ -121,14 +126,20 @@ public class AuthenticationController {
 
 	@PostMapping("/signup")
 	public ResponseEntity<?> registerUser(@RequestBody UserRequest userRequest) {
-		User existUser = userService.findByUsername(userRequest.getUsername());
 
-		if (existUser != null) {
-			return ResponseEntity.status(HttpStatus.CONFLICT)
-					.body("Username already exists");
+		BloomFilter<String> usernameBloomFilter = bloomFilterConfig.getUsernameBloomFilter();
+		String normalizedUsername = userRequest.getUsername().toLowerCase();
+
+		if (usernameBloomFilter.mightContain(normalizedUsername)) {
+			User existUser = userService.findByUsername(normalizedUsername);
+			if (existUser != null) {
+				return ResponseEntity.status(HttpStatus.CONFLICT)
+						.body("Username already exists");
+			}
 		}
 
 		User user = userService.saveTransactional(userRequest);
+		usernameBloomFilter.put(user.getUsername().toLowerCase());
 
 		// Generate activation link
 		String token = tokenUtils.generateToken(user.getUsername());

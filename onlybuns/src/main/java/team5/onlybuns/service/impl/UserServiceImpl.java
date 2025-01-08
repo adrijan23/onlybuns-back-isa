@@ -253,4 +253,8 @@ public class UserServiceImpl implements UserService {
 		userRepository.save(user); // Save the updated user
 	}
 
+	public List<String> findAllUsernames() {
+		return userRepository.findAllUsernames();
+	}
+
 }
