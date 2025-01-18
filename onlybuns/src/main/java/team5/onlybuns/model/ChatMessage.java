@@ -8,7 +8,6 @@ import java.util.Date;
 @Getter
 @Entity
 @Table(name="MESSAGES")
-@NoArgsConstructor
 @AllArgsConstructor
 @Data
 @ToString
@@ -21,5 +20,14 @@ public class ChatMessage {
     @Setter
     private String content;
     @Setter
+    @Column(name = "date")
     private Date date;
+
+    @ManyToOne
+    @JoinColumn(name = "chat_room_id")
+    private ChatRoom chatRoom;
+
+    public ChatMessage() {
+        this.date = new Date();
+    }
 }
