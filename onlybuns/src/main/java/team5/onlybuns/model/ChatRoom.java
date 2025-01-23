@@ -1,5 +1,6 @@
 package team5.onlybuns.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -31,10 +32,12 @@ public class ChatRoom {
 
     @Setter
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<ChatMessage> messages = new ArrayList<>();
 
     @Setter
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<ChatUser> chatUsers = new ArrayList<>();
 
     public ChatRoom() {

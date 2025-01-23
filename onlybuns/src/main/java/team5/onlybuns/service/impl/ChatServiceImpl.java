@@ -33,6 +33,11 @@ public class ChatServiceImpl implements ChatService{
     private UserRepository userRepository;
 
     @Override
+    public ChatRoom findChatRoomById(Long id) {
+        return chatRoomRepository.findById(id).orElse(null);
+    }
+
+    @Override
     public void saveMessage(ChatMessage message, String roomId) {
         ChatRoom chatRoom = chatRoomRepository.findById(Long.parseLong(roomId)).orElseThrow(() -> new EntityNotFoundException("ChatRoom not found"));
         message.setChatRoom(chatRoom);
@@ -50,14 +55,12 @@ public class ChatServiceImpl implements ChatService{
     }
 
     @Override
-    public ChatRoom createChatRoom(Long adminId) {
-        ChatRoom chatRoom = new ChatRoom();
-        chatRoom.setChatAdminId(adminId);
+    public ChatRoom createChatRoom(ChatRoom chatRoom) {
         return chatRoomRepository.save(chatRoom);
     }
 
     @Override
-    public ChatUser joinChatRoom(Long chatRoomId, Long userId) {
+    public ChatUser addUserToChatRoom(Long chatRoomId, Long userId) {
         User user = userRepository.findById(userId).orElseThrow(()-> new RuntimeException("User not found"));
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(()-> new RuntimeException("ChatRoom not found"));
 
