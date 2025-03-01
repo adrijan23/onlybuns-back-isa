@@ -220,7 +220,7 @@ public class PostController {
             User userPosted = postService.getPost(postId).getUser();
             Set<User> userFollowing = userService.getFollowing(userCommenting.getId());
             Long a = commentsService.findCommentsCountFromLastHourForUser(userCommenting.getId());
-            if (!(userFollowing.contains(userPosted))) {
+            if (!(userFollowing.contains(userPosted)) && userCommenting != userPosted) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You must follow the post owner to comment.");
             } else if(commentsService.findCommentsCountFromLastHourForUser(userCommenting.getId()) > commentsPerHourLimit - 1) {
                 return ResponseEntity.status(429).body("You've exceeded limit of " + commentsPerHourLimit + " comments per hour.");
