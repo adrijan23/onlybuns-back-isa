@@ -13,4 +13,5 @@ public interface ChatService {
     ChatRoom createChatRoom(ChatRoom chatRoom);
     ChatUser addUserToChatRoom(Long chatRoomId, Long userId);
     List<ChatRoom> getChatRoomsForUser(Long userId);
+    List<ChatMessage> getMessages(Long chatRoomId, Long userId);
 }

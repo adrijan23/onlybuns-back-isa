@@ -55,3 +55,24 @@ INSERT INTO COMMENTS (content, created_at, user_id, post_id) VALUES ('This view 
 INSERT INTO COMMENTS (content, created_at, user_id, post_id) VALUES ('This view is totally worth the climb!', '2024-01-09 17:45:00', 3, 8);
 
 INSERT INTO POST_LIKES (liked_at, post_id, user_id) VALUES ('2024-11-09 15:00:00', 1, 2);
+
+INSERT INTO USER_FOLLOWING (follower_id, following_id) VALUES (1,2);
+INSERT INTO USER_FOLLOWING (follower_id, following_id) VALUES (2,1);
+
+INSERT INTO CHAT_ROOMS (chat_admin_id, created_at, name) VALUES (1, '"2025-02-28 22:38:06', 'olelole');
+
+INSERT INTO CHAT_USERS (join_time, chat_room_id, user_id) VALUES ('2025-02-28 22:41:08', 1, 2);
+INSERT INTO CHAT_USERS (join_time, chat_room_id, user_id) VALUES ('2025-02-28 22:41:03', 1, 1);
+INSERT INTO CHAT_USERS (join_time, chat_room_id, user_id) VALUES ('2025-02-28 22:41:14', 1, 4);
+
+INSERT INTO MESSAGES (content, date, username, chat_room_id) VALUES ('1', '2025-02-28 22:41:04', 'user', 1);
+INSERT INTO MESSAGES (content, date, username, chat_room_id) VALUES ('2', '2025-02-28 22:41:05', 'user', 1);
+INSERT INTO MESSAGES (content, date, username, chat_room_id) VALUES ('3', '2025-02-28 22:41:06', 'user', 1);
+INSERT INTO MESSAGES (content, date, username, chat_room_id) VALUES ('4', '2025-02-28 22:41:07', 'user', 1);
+INSERT INTO MESSAGES (content, date, username, chat_room_id) VALUES ('5', '2025-02-28 22:41:08', 'user', 1);
+INSERT INTO MESSAGES (content, date, username, chat_room_id) VALUES ('6', '2025-02-28 22:41:09', 'admin', 1);
+INSERT INTO MESSAGES (content, date, username, chat_room_id) VALUES ('7', '2025-02-28 22:41:10', 'admin', 1);
+INSERT INTO MESSAGES (content, date, username, chat_room_id) VALUES ('8', '2025-02-28 22:41:11', 'admin', 1);
+INSERT INTO MESSAGES (content, date, username, chat_room_id) VALUES ('9', '2025-02-28 22:41:12', 'admin', 1);
+INSERT INTO MESSAGES (content, date, username, chat_room_id) VALUES ('10', '2025-02-28 22:41:13', 'admin', 1);
+INSERT INTO MESSAGES (content, date, username, chat_room_id) VALUES ('11', '2025-02-28 22:41:14', 'admin', 1);

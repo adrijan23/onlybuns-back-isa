@@ -22,7 +22,7 @@ import java.util.List;
 
 @Controller
 @CrossOrigin("http://localhost:3000")
-public class ChatContoller {
+public class ChatController {
 
     @Autowired
     private ChatService chatService;
@@ -31,14 +31,9 @@ public class ChatContoller {
     @MessageMapping("/chat/{roomId}")
     @SendTo("/chat-room/{roomId}")
     public ChatMessage sendMessage(@DestinationVariable String roomId, @Payload ChatMessage message) {
-        message.setDate(new Date());
+        message.setDate(LocalDateTime.now());
         chatService.saveMessage(message, roomId);
         return message;
     }
 
-//    @MessageMapping("/chat/{roomId}/history")
-//    @SendTo("/chat-room/{roomId}")
-//    public List<ChatMessage> getChatHistory(@DestinationVariable String roomId, @Payload Long userId) {
-//        return chatService.getLast10Messages(Long.parseLong(roomId), userId);
-//    }
 }

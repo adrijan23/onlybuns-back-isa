@@ -4,12 +4,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import team5.onlybuns.model.ChatMessage;
 import team5.onlybuns.model.ChatRoom;
 import team5.onlybuns.model.ChatUser;
 import team5.onlybuns.model.User;
 import team5.onlybuns.service.ChatService;
 import team5.onlybuns.service.UserService;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -61,5 +64,13 @@ public class ChatRestController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @GetMapping("messages/{roomId}/{userId}")
+    public List<ChatMessage> getChatHistory(@PathVariable Long roomId, @PathVariable Long userId) {
+        List<ChatMessage> messages = new ArrayList<>(chatService.getLast10Messages(roomId, userId));
+        Collections.reverse(messages);
+        messages.addAll(chatService.getMessages(roomId, userId));
+        return messages;
     }
 }

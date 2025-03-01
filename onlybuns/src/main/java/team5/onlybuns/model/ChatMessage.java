@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Getter
@@ -22,7 +23,7 @@ public class ChatMessage {
     private String content;
     @Setter
     @Column(name = "date")
-    private Date date;
+    private LocalDateTime date;
 
     @ManyToOne
     @JoinColumn(name = "chat_room_id")
@@ -30,6 +31,6 @@ public class ChatMessage {
     private ChatRoom chatRoom;
 
     public ChatMessage() {
-        this.date = new Date();
+        this.date = LocalDateTime.now();
     }
 }

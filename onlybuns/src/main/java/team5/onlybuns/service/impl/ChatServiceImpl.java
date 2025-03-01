@@ -55,6 +55,15 @@ public class ChatServiceImpl implements ChatService{
     }
 
     @Override
+    public List<ChatMessage> getMessages(Long chatRoomId, Long userId) {
+        ChatUser chatUser = chatUserRepository.findByUserIdAndChatRoomId(userId, chatRoomId);
+        if(chatUser != null) {
+            return chatMessageRepository.getMessages(chatRoomId, chatUser.getJoinTime());
+        }
+        return Collections.emptyList();
+    }
+
+    @Override
     public ChatRoom createChatRoom(ChatRoom chatRoom) {
         return chatRoomRepository.save(chatRoom);
     }
