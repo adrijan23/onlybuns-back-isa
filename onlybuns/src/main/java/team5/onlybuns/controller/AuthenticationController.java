@@ -17,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import team5.onlybuns.config.ActiveUsersMetricsConfig;
 import team5.onlybuns.config.BloomFilterConfig;
 import team5.onlybuns.dto.JwtAuthenticationRequest;
 import team5.onlybuns.dto.UserRequest;
@@ -52,7 +53,19 @@ public class AuthenticationController {
 	@Autowired
 	private BloomFilterConfig bloomFilterConfig;
 
+	@Autowired
+	private ActiveUsersMetricsConfig metricsConfig;
+
 	private static final int MAX_ATTEMPTS = 5; // Maksimalan broj pokušaja logina po IP adresi
+
+
+	public void onLoginSuccess() {
+		metricsConfig.getActiveUsers().incrementAndGet();
+	}
+
+	public void onLogout() {
+		metricsConfig.getActiveUsers().decrementAndGet();
+	}
 
 	@PostMapping("/login")
 	public ResponseEntity<UserTokenState> createAuthenticationToken(
@@ -84,7 +97,7 @@ public class AuthenticationController {
 
 			String jwt = tokenUtils.generateToken(user.getUsername());
 			int expiresIn = tokenUtils.getExpiredIn();
-
+			onLoginSuccess();
 			return ResponseEntity.ok(new UserTokenState(jwt, expiresIn));
 		} catch (Exception e) {
 			// Registrujemo neuspešan pokušaj logina
@@ -151,6 +164,12 @@ public class AuthenticationController {
 				"Please click the link to activate your account: " + activationLink);
 
 		return new ResponseEntity<>(user, HttpStatus.CREATED);
+	}
+
+	@PostMapping("/logout")
+	public ResponseEntity<String> logout() {
+		onLogout();
+		return ResponseEntity.ok("Logged out");
 	}
 
 	@GetMapping("/activate")
