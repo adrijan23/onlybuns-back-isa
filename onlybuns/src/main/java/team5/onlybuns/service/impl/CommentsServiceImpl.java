@@ -81,4 +81,24 @@ public class CommentsServiceImpl implements CommentsService {
     public Integer countByPostId(Long postId){
         return commentsRepository.countByPostId(postId);
     }
+
+    @Override
+    public List<Integer> getAvailableYears() {
+        return commentsRepository.getAvailableYears();
+    }
+
+    @Override
+    public List<Integer> getAvailableMonths(Integer year) {
+        return commentsRepository.getAvailableMonthsByYear(year);
+    }
+
+    @Override
+    public List<Object[]> getPerMonth(Integer year) {
+        return commentsRepository.getCommentsPerMonth(year);
+    }
+
+    @Override
+    public List<Object[]> getPerDay(Integer year, Integer month) {
+        return commentsRepository.getCommentsPerDay(year, month);
+    }
 }

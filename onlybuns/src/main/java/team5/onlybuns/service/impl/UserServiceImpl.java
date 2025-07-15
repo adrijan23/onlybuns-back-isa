@@ -175,7 +175,8 @@ public class UserServiceImpl implements UserService {
 	@Scheduled(cron = "59 59 23 L * ?")
 	@Transactional
 	public void deleteDisabledUsers() {
-		userRepository.deleteDisabledUsers();
+		LocalDateTime cutoffDate = LocalDateTime.now().minusDays(30);
+		userRepository.deleteDisabledUsers(cutoffDate);
 	}
 
 	//@RateLimiter(name = "standard", fallbackMethod = "rateLimitFallback") // resilience4j
@@ -253,6 +254,19 @@ public class UserServiceImpl implements UserService {
 		userRepository.save(user); // Save the updated user
 	}
 
+	@Override
+	public Double getPostedPercentage() {
+		return userRepository.getUsersPostedPercentage();
+	}
+
+	@Override
+	public Double getOnlyCommentedPercentage() {
+		return userRepository.getUsersOnlyCommentedPercentage();
+	}
+
+	@Override
+	public Double getNoPostOrCommentPercentage() {
+		return userRepository.getUsersWithNoPostsOrCommentsPercentage();
 	public List<String> findAllUsernames() {
 		return userRepository.findAllUsernames();
 	}

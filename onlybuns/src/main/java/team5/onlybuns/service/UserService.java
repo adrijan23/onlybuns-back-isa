@@ -32,6 +32,9 @@ public interface UserService {
     List<User> getTopLikersWeekly();
     boolean checkPassword(String rawPassword, String encodedPassword);
     void updatePassword(Long userId, String newPassword);
+    Double getPostedPercentage();
+    Double getOnlyCommentedPercentage();
+    Double getNoPostOrCommentPercentage();
 
     List<String> findAllUsernames();
 }

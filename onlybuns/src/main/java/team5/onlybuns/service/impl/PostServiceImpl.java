@@ -181,6 +181,11 @@ public class PostServiceImpl implements PostService {
         return likeRepository.countByPostId(postId);
     }
 
+    @Override
+    public List<Post> findByYear(Integer year) {
+        return postRepository.findPostsByYear(year);
+    }
+
 
     @Override
     public Integer getPostCount() {
@@ -204,5 +209,24 @@ public class PostServiceImpl implements PostService {
     @Cacheable("topPostsAllTime")
     public List<Post> getTopPostsAllTime() {
         return postRepository.findTopPostsAllTime(PageRequest.of(0, 10)); // Top 10 posts
+    }
+
+    @Override
+    public List<Integer> getAvailableYears() {
+        return postRepository.getAvailablePostYears();
+    }
+
+    @Override
+    public List<Integer> getAvailableMonths(Integer year) {
+        return postRepository.getAvailableMonthsByYear(year);
+    }
+
+    public List<Object[]> getPerMonth(Integer year){
+        return postRepository.getPostsPerMonth(year);
+    }
+
+    @Override
+    public List<Object[]> getPerDay(Integer year, Integer month) {
+        return postRepository.getPostsPerDay(year, month);
     }
 }

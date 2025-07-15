@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/api/posts")
 public class PostController {
 
@@ -221,7 +220,7 @@ public class PostController {
             User userPosted = postService.getPost(postId).getUser();
             Set<User> userFollowing = userService.getFollowing(userCommenting.getId());
             Long a = commentsService.findCommentsCountFromLastHourForUser(userCommenting.getId());
-            if (!(userFollowing.contains(userPosted))) {
+            if (!(userFollowing.contains(userPosted)) && userCommenting != userPosted) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You must follow the post owner to comment.");
             } else if(commentsService.findCommentsCountFromLastHourForUser(userCommenting.getId()) > commentsPerHourLimit - 1) {
                 return ResponseEntity.status(429).body("You've exceeded limit of " + commentsPerHourLimit + " comments per hour.");
@@ -262,6 +261,53 @@ public class PostController {
     @GetMapping("/{postId}/comment-count")
     public Integer getCommentsCount(@PathVariable Long postId) {
         return commentsService.countByPostId(postId);
+    }
+
+    @GetMapping("/years")
+    public List<Integer> getAvailableYears() {
+        return postService.getAvailableYears();
+    }
+
+    @GetMapping("/months")
+    public List<Integer> getAvailableMonths(@RequestParam Integer year) {
+        return postService.getAvailableMonths(year);
+    }
+
+    @GetMapping("/analytics/yearly")
+    public List<Object[]> getYearlyAnalytics(@RequestParam("year") Integer year) {
+        return postService.getPerMonth(year);
+    }
+
+    @GetMapping("/analytics/monthly")
+    public List<Object[]> getMonthlyAnalytics(@RequestParam("year") Integer year
+    , @RequestParam("month") Integer month) {
+        return postService.getPerDay(year, month);
+    }
+
+    @GetMapping("/analytics")
+    public List<Post> getByYear(@RequestParam("year") Integer year) {
+        return postService.findByYear(year);
+    }
+
+    @GetMapping("/comments/years")
+    public List<Integer> getCommentsYears() {
+        return commentsService.getAvailableYears();
+    }
+
+    @GetMapping("/comments/months")
+    public List<Integer> getCommentsMonths(@RequestParam Integer year) {
+        return commentsService.getAvailableMonths(year);
+    }
+
+    @GetMapping("/comments/analytics/yearly")
+    public List<Object[]> getYearlyCommentsAnalytics(@RequestParam("year") Integer year) {
+        return commentsService.getPerMonth(year);
+    }
+
+    @GetMapping("/comments/analytics/monthly")
+    public List<Object[]> getMonthlyCommentsAnalytics(@RequestParam("year") Integer year
+            , @RequestParam("month") Integer month) {
+        return commentsService.getPerDay(year, month);
     }
 
 }

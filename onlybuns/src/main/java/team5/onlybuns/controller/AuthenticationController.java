@@ -160,6 +160,7 @@ public class AuthenticationController {
 
 		if (user != null) {
 			user.setEnabled(true);
+			user.setRegistrationDate(LocalDateTime.now());
 			userService.update(user);
 			return ResponseEntity.ok("Account activated successfully");
 		} else {
