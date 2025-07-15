@@ -24,8 +24,10 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import team5.onlybuns.dto.UserRequest;
+import team5.onlybuns.dto.UserWithStatsDto;
 import team5.onlybuns.model.Role;
 import team5.onlybuns.model.User;
+import team5.onlybuns.repository.PostRepository;
 import team5.onlybuns.repository.UserRepository;
 import team5.onlybuns.service.RoleService;
 import team5.onlybuns.service.UserService;
@@ -51,6 +53,8 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private CacheManager cacheManager;
 	private static final int MAX_FOLLOWS_PER_MINUTE = 5;
+    @Autowired
+    private PostRepository postRepository;
 
 	@Transactional
 	@Override
@@ -170,6 +174,25 @@ public class UserServiceImpl implements UserService {
 	public Page<User> getPaginated(int page, int size) {
 		Pageable pageable = PageRequest.of(page,size);
 		return userRepository.findAll(pageable);
+	}
+
+	public Page<UserWithStatsDto> getPaginatedWithStats(int page, int size) {
+		Pageable pageable = PageRequest.of(page,size);
+		Page<User> users = userRepository.findAll(pageable);
+		return users.map(user -> {
+			Integer followersCount = userRepository.countFollowersByUserId(user.getId());
+			Integer followingCount = userRepository.countFollowingByUserId(user.getId());
+			Integer postsCount = postRepository.countPostsByUserId(user.getId());
+			return new UserWithStatsDto(
+					user.getId(),
+					user.getUsername(),
+					user.getEmail(),
+					user.getFirstName(),
+					user.getLastName(),
+					followersCount,
+					followingCount,
+					postsCount);
+		});
 	}
 
 	@Scheduled(cron = "59 59 23 L * ?")

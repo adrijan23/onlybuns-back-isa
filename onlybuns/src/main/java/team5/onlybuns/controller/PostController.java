@@ -102,12 +102,16 @@ public class PostController {
     }
 
     @PutMapping("/id/{postId}")
-    public ResponseEntity<Post> updatePost(@PathVariable Long postId, @RequestBody PostRequest postRequest) {
+    public ResponseEntity<Post> updatePost(@PathVariable Long postId,
+                                            @Valid @RequestPart PostRequest postRequest,
+                                           @RequestPart(value = "image", required = false) MultipartFile image   ) {
         try {
-            // Retrieve the existing post
             Post post = postService.getPost(postId);
-
-            // Update the description and other fields
+            String imagePath = null;
+            if (image != null && !image.isEmpty()) {
+                imagePath = imageRepository.saveImage(image);
+                post.setImagePath(imagePath);
+            }
             post.setDescription(postRequest.getDescription());
             post.setAddress(postRequest.getAddress());
             post.setLatitude(postRequest.getLatitude());

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.*;
 
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
+import team5.onlybuns.dto.UserWithStatsDto;
 import team5.onlybuns.model.User;
 
 import javax.persistence.LockModeType;
@@ -63,5 +64,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u.username FROM User u")
     List<String> findAllUsernames();
+
+//    @Query("SELECT new team5.onlybuns.dto.UserWithStatsDto(" +
+//            "u.id, u.username, u.email, u.firstName, u.lastName," +
+//            "(SELECT COUNT(f1) FROM User u1 JOIN u1.followers f1 WHERE u1.id = u.id)," +
+//            "(SELECT COUNT(f2) FROM User u2 JOIN u2.following f2 WHERE  u2.id = u.id)," +
+//            "(SELECT COUNT(p) FROM Post p WHERE p.user.id = u.id)" +
+//            ") FROM User u")
+//    Page<UserWithStatsDto> findAllWithStats(Pageable pageable);
+
+    @Query("SELECT COUNT(f1) FROM User u1 JOIN u1.followers f1 WHERE u1.id = :userId")
+    Integer countFollowersByUserId(@Param("userId") Long userId);
+    @Query("SELECT COUNT(f1) FROM User u1 JOIN u1.following f1 WHERE u1.id = :userId")
+    Integer countFollowingByUserId(@Param("userId") Long userId);
 }
 

@@ -51,4 +51,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "ORDER BY availableMonth", nativeQuery = true)
     List<Integer> getAvailableMonthsByYear(@Param("year") int year);
 
+    @Query("SELECT COUNT(p) FROM Post p WHERE p.user.id = :userId")
+    Integer countPostsByUserId(@Param("userId") Long userId);
 }

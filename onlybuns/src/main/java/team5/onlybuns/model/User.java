@@ -89,7 +89,7 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     private List<Role> roles;
 
-    @ManyToMany(fetch = FetchType.EAGER) // treba vratiti na LAZY
+    @ManyToMany(fetch = FetchType.LAZY) // treba vratiti na LAZY
     @JoinTable(
             name = "user_following", // Join table name
             joinColumns = @JoinColumn(name = "follower_id", referencedColumnName = "id"), // Foreign key for the user who is following
@@ -98,7 +98,7 @@ public class User implements UserDetails {
     @JsonIgnore // Prevent serialization by default
     private Set<User> following = new HashSet<>();
 
-    @ManyToMany(mappedBy = "following", fetch = FetchType.EAGER) // zbog pristupa u testovima je EAGER ~Zeka
+    @ManyToMany(mappedBy = "following", fetch = FetchType.LAZY) // zbog pristupa u testovima je EAGER ~Zeka
     @JsonIgnore // To prevent infinite recursion during serialization
     private Set<User> followers = new HashSet<>();
 
