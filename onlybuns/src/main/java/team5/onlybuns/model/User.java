@@ -98,6 +98,16 @@ public class User implements UserDetails {
     @JsonIgnore // To prevent infinite recursion during serialization
     private Set<User> followers = new HashSet<>();
 
+    @Column(name = "registration_date")
+    private LocalDateTime registrationDate;
+
+    public LocalDateTime getRegistrationDate() {
+        return registrationDate;
+    }
+    public void setRegistrationDate(LocalDateTime registrationDate) {
+        this.registrationDate = registrationDate;
+    }
+
     public Set<User> getFollowing() {
         return following;
     }

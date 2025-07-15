@@ -29,8 +29,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Modifying
     @Transactional
-    @Query("DELETE FROM User u WHERE u.enabled = false")
-    void deleteDisabledUsers();
+    @Query("DELETE FROM User u WHERE u.enabled = false AND u.registrationDate < :cutoffDate")
+    void deleteDisabledUsers(@Param("cutoffDate") LocalDateTime cutoffDate);
 
     @Query("SELECT u FROM User u " +
             "JOIN u.likes l " +

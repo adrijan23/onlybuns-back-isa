@@ -175,7 +175,8 @@ public class UserServiceImpl implements UserService {
 	@Scheduled(cron = "59 59 23 L * ?")
 	@Transactional
 	public void deleteDisabledUsers() {
-		userRepository.deleteDisabledUsers();
+		LocalDateTime cutoffDate = LocalDateTime.now().minusDays(30);
+		userRepository.deleteDisabledUsers(cutoffDate);
 	}
 
 	//@RateLimiter(name = "standard", fallbackMethod = "rateLimitFallback") // resilience4j
