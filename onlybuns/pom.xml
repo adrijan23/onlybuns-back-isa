@@ -111,9 +111,12 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>32.1.2-jre</version> <!-- Replace with the latest version if necessary -->
+			<version>32.1.2-jre</version>
 		</dependency>
 
 	</dependencies>
