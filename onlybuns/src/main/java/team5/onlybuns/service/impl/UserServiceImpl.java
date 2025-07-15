@@ -267,6 +267,8 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public Double getNoPostOrCommentPercentage() {
 		return userRepository.getUsersWithNoPostsOrCommentsPercentage();
+	public List<String> findAllUsernames() {
+		return userRepository.findAllUsernames();
 	}
 
 }

@@ -35,4 +35,6 @@ public interface UserService {
     Double getPostedPercentage();
     Double getOnlyCommentedPercentage();
     Double getNoPostOrCommentPercentage();
+
+    List<String> findAllUsernames();
 }

@@ -61,6 +61,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "WHERE p.user_id IS NULL AND c.user_id IS NULL", nativeQuery = true)
     Double getUsersWithNoPostsOrCommentsPercentage();
 
-
+    @Query("SELECT u.username FROM User u")
+    List<String> findAllUsernames();
 }
 
