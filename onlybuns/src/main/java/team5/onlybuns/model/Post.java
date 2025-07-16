@@ -41,6 +41,11 @@ public class Post {
     @Setter
     private LocalDateTime createdAt;
 
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    @Getter
+    @Setter
+    private boolean markedForAds = false;
+
     @ManyToOne
     @Getter
     @Setter
