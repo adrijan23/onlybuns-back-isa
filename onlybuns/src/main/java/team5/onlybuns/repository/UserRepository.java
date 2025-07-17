@@ -13,6 +13,7 @@ import javax.persistence.LockModeType;
 import javax.persistence.QueryHint;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
@@ -21,6 +22,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE) // Or READ if required
     @Query("SELECT u FROM User u WHERE u.username = :username")
     User findByUsernameWithLock(@Param("username") String username);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT u FROM User u WHERE u.id = :id")
+    Optional<User> findByIdWithLock(@Param("id") Long id);
 
     //Users that havent logged in last 7 days
     @Query(value = "SELECT * FROM public.users WHERE last_active < NOW() - INTERVAL '7 days'", nativeQuery = true)

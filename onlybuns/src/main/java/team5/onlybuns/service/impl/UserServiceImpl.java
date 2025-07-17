@@ -10,6 +10,8 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.data.domain.Page;
@@ -205,30 +207,37 @@ public class UserServiceImpl implements UserService {
 	//@RateLimiter(name = "standard", fallbackMethod = "rateLimitFallback") // resilience4j
 	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public void followUser(Long followerId, Long followingId) {
+//		long now = System.currentTimeMillis();
+//		System.out.println("ENTER followUser:"+followerId+" follower={ following="+followingId+" at "+now+" on "+Thread.currentThread().getName());
 		try {
-			Cache cache = cacheManager.getCache("followLimitCache");
-
-			// Retrieve the current count of follows from the cache
-			Integer followCount = cache.get(followerId, Integer.class);
-
-			if (followCount == null) {
-				// First follow in this minute
-				cache.put(followerId, 1);
-			} else if (followCount < MAX_FOLLOWS_PER_MINUTE) {
-				// Increment the follow count
-				cache.put(followerId, followCount + 1);
-			} else {
-				throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "You have exceeded the follow limit of " + MAX_FOLLOWS_PER_MINUTE + " per minute.");
+			if(followerId.equals(followingId)){
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot follow yourself");
 			}
+
 			User follower = userRepository.findById(followerId)
-					.orElseThrow(() -> new RuntimeException("User not found"));
-			User following = userRepository.findById(followingId)
-					.orElseThrow(() -> new RuntimeException("User not found"));
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Follower not found"));
+			User following = userRepository.findByIdWithLock(followingId)
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User to follow not found"));
+
+			if(follower.getFollowing().contains(following)){
+				throw new ResponseStatusException(HttpStatus.CONFLICT, "Already following this user");
+			}
 
 			follower.getFollowing().add(following);
+			following.setFollowersCount(following.getFollowersCount() + 1);
+
 			userRepository.save(follower);
+			userRepository.save(following);
+
 		} catch (OptimisticLockException e) {
-			throw new RuntimeException("Failed to follow the user due to a concurrent update. Please try again.");
+			throw new ResponseStatusException(HttpStatus.CONFLICT,
+					"Another operation is in progress. Please try again.");
+		} catch (PessimisticLockingFailureException e) {
+			throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT,
+					"Operation timed out. Please try again.");
+		} catch (DataIntegrityViolationException e){
+			throw new ResponseStatusException(HttpStatus.CONFLICT,
+					"Follow relationship already exists or violates constraints");
 		}
 	}
 	// za resilience4j RateLimiter
@@ -245,7 +254,9 @@ public class UserServiceImpl implements UserService {
 					.orElseThrow(() -> new RuntimeException("User not found"));
 
 			follower.getFollowing().remove(following);
+			following.setFollowersCount(following.getFollowersCount() - 1);
 			userRepository.save(follower);
+			userRepository.save(following);
 		}catch (OptimisticLockException e){
 			throw new RuntimeException("Failed to follow the user due to a concurrent update. Please try again.");
 		}

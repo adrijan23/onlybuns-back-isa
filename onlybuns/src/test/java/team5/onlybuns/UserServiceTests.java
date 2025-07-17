@@ -76,6 +76,7 @@ public class UserServiceTests {
     }
 
     @Test
+    @Transactional
     void testConcurrentFollowSameUser() throws Exception {
         // Step 1: two followers and one following user
         User follower1 = userService.findByIdWithFollowing(3L);
@@ -122,34 +123,34 @@ public class UserServiceTests {
 
         executor.shutdown();
     }
-
-    @Test
-    @Transactional
-    void testFollowRateLimit() {
-        Long followerId = 1L;
-        Long followingId = 2L;
-
-        int maxFollowsPerMinute = 5;
-
-        Cache cache = cacheManager.getCache("followLimitCache");
-        cache.clear();
-
-        for (int i = 0; i < maxFollowsPerMinute; i++) {
-            userService.followUser(followerId, followingId);
-        }
-
-        //no exceptions for other followings
-        assertDoesNotThrow(() -> {
-            userService.followUser(followingId, followerId);
-        });
-
-        Throwable thrown = assertThrows(ResponseStatusException.class, () -> {
-            userService.followUser(followerId, followingId);
-        });
-
-        assertEquals(HttpStatus.TOO_MANY_REQUESTS, ((ResponseStatusException) thrown).getStatus());
-        assertTrue(thrown.getMessage().contains("You have exceeded the follow limit"));
-    }
+//
+//    @Test
+//    @Transactional
+//    void testFollowRateLimit() {
+//        Long followerId = 1L;
+//        Long followingId = 2L;
+//
+//        int maxFollowsPerMinute = 5;
+//
+//        Cache cache = cacheManager.getCache("followLimitCache");
+//        cache.clear();
+//
+//        for (int i = 0; i < maxFollowsPerMinute; i++) {
+//            userService.followUser(followerId, followingId);
+//        }
+//
+//        //no exceptions for other followings
+//        assertDoesNotThrow(() -> {
+//            userService.followUser(followingId, followerId);
+//        });
+//
+//        Throwable thrown = assertThrows(ResponseStatusException.class, () -> {
+//            userService.followUser(followerId, followingId);
+//        });
+//
+//        assertEquals(HttpStatus.TOO_MANY_REQUESTS, ((ResponseStatusException) thrown).getStatus());
+//        assertTrue(thrown.getMessage().contains("You have exceeded the follow limit"));
+//    }
 
 
 }
