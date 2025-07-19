@@ -58,8 +58,8 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private PostRepository postRepository;
 
-	@Autowired
-	private RateLimitService rateLimitService;
+//	@Autowired
+//	private RateLimitService rateLimitService;
 
 	@Transactional
 	@Override

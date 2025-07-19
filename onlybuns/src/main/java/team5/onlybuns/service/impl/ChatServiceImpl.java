@@ -33,11 +33,6 @@ public class ChatServiceImpl implements ChatService{
     private UserRepository userRepository;
 
     @Override
-    public ChatRoom findChatRoomById(Long id) {
-        return chatRoomRepository.findById(id).orElse(null);
-    }
-
-    @Override
     public void saveMessage(ChatMessage message, String roomId) {
         ChatRoom chatRoom = chatRoomRepository.findById(Long.parseLong(roomId)).orElseThrow(() -> new EntityNotFoundException("ChatRoom not found"));
         message.setChatRoom(chatRoom);
@@ -46,7 +41,7 @@ public class ChatServiceImpl implements ChatService{
 
     @Override
     public List<ChatMessage> getLast10Messages(Long chatRoomId, Long userId) {
-        ChatUser chatUser = chatUserRepository.findByUserIdAndChatRoomId(userId, chatRoomId);
+        ChatUser chatUser = chatUserRepository.findByUserIdAndChatRoomId(userId, chatRoomId).orElseThrow(() -> new EntityNotFoundException("ChatUser not found"));
         if(chatUser != null) {
             Pageable pageable = PageRequest.of(0,10);
             return chatMessageRepository.findMessagesBeforeJoin(chatRoomId, chatUser.getJoinTime(), pageable);
@@ -56,11 +51,16 @@ public class ChatServiceImpl implements ChatService{
 
     @Override
     public List<ChatMessage> getMessages(Long chatRoomId, Long userId) {
-        ChatUser chatUser = chatUserRepository.findByUserIdAndChatRoomId(userId, chatRoomId);
+        ChatUser chatUser = chatUserRepository.findByUserIdAndChatRoomId(userId, chatRoomId).orElseThrow(() -> new EntityNotFoundException("ChatUser not found"));
         if(chatUser != null) {
             return chatMessageRepository.getMessages(chatRoomId, chatUser.getJoinTime());
         }
         return Collections.emptyList();
+    }
+
+    @Override
+    public List<ChatUser> getUsers(Long chatRoomId) {
+        return chatUserRepository.findByChatRoomId(chatRoomId);
     }
 
     @Override
@@ -80,7 +80,20 @@ public class ChatServiceImpl implements ChatService{
     }
 
     @Override
+    public void removeUserFromChatRoom(Long chatRoomId, Long userId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(()-> new RuntimeException("ChatRoom not found"));
+
+        ChatUser chatUser = chatUserRepository.findByUserIdAndChatRoomId(userId, chatRoomId).orElseThrow(()-> new RuntimeException("ChatUser not found"));
+        chatUserRepository.delete(chatUser);
+    }
+
+    @Override
     public List<ChatRoom> getChatRoomsForUser(Long userId) {
         return chatUserRepository.findChatRoomsByUserId(userId);
+    }
+
+    @Override
+    public ChatRoom getChatRoomById(Long chatRoomId) {
+        return chatRoomRepository.findById(chatRoomId).orElseThrow(()-> new RuntimeException("ChatRoom not found"));
     }
 }

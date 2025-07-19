@@ -36,4 +36,14 @@
         </expiry>
         <heap unit="entries">1000</heap> <!-- Max 1000 users tracked simultaneously -->
     </cache>
+
+    <cache alias="imageCache">
+        <expiry>
+            <ttl unit="hours">24</ttl> <!-- Cache images for 24 hours -->
+        </expiry>
+            <resources>
+        <heap unit="entries">500</heap> <!-- 100MB allocated for image caching -->
+    </resources>
+    </cache>
+
 </config>
