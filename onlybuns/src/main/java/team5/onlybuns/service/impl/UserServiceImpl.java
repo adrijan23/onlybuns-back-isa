@@ -54,9 +54,12 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	private CacheManager cacheManager;
-	private static final int MAX_FOLLOWS_PER_MINUTE = 5;
+	private static final int MAX_FOLLOWS_PER_MINUTE = 50;
     @Autowired
     private PostRepository postRepository;
+
+	@Autowired
+	private RateLimitService rateLimitService;
 
 	@Transactional
 	@Override
@@ -204,9 +207,17 @@ public class UserServiceImpl implements UserService {
 		userRepository.deleteDisabledUsers(cutoffDate);
 	}
 
-	//@RateLimiter(name = "standard", fallbackMethod = "rateLimitFallback") // resilience4j
+		//----------RESILIENCE IMPL----------
+	@RateLimiter(name = "standard", fallbackMethod = "rateLimitFallback") // resilience4j
 	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public void followUser(Long followerId, Long followingId) {
+		//------------REDIS IMPL-------------
+//		if(!rateLimitService.checkRateLimit(followerId)){
+//			throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
+//					"You have exceeded the follow limit of "+MAX_FOLLOWS_PER_MINUTE+" per minute");
+//		}
+
+		//-----CONCURRENT DEBUG COMMENT------
 //		long now = System.currentTimeMillis();
 //		System.out.println("ENTER followUser:"+followerId+" follower={ following="+followingId+" at "+now+" on "+Thread.currentThread().getName());
 		try {
@@ -240,10 +251,12 @@ public class UserServiceImpl implements UserService {
 					"Follow relationship already exists or violates constraints");
 		}
 	}
+
 	// za resilience4j RateLimiter
-//	public void rateLimitFallback(Long followerId, Long followingId, Throwable t) {
-//		throw new RuntimeException("Rate limit exceeded. Try again later.");
-//	}
+	public void rateLimitFallback(Long followerId, Long followingId, Throwable t) {
+		throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
+					"You have exceeded the follow limit of "+MAX_FOLLOWS_PER_MINUTE+" per minute");
+	}
 
 	@Transactional
 	public void unfollowUser(Long followerId, Long followingId) {

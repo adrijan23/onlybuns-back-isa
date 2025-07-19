@@ -212,7 +212,21 @@ public class FollowServiceTest {
     public void testRateLimiting() throws InterruptedException {
         System.out.println("🧪 Starting rate limiting test...");
 
-        User rateLimitUser = createTestUser("rateLimitUser", "rate@test.com", "Rate", "Limit");
+        User rateLimitUser = createTestUser("concurrentCelebrity", "concurrent@test.com", "Concurrent", "Celebrity");
+
+        // Create follower users for this test
+        List<User> targetUsers = new ArrayList<>();
+        for (int i = 0; i < 60; i++) {
+            User follower = createTestUser("concurrentFollower" + i, "cfollower" + i + "@test.com", "Concurrent", "Follower" + i);
+            targetUsers.add(follower);
+        }
+
+        // Ensure all users are persisted
+        userRepository.flush();
+
+        TestTransaction.flagForCommit();   // mark the current (test) tx for commit
+        TestTransaction.end();             // actually commit & close it
+        TestTransaction.start();           // start a fresh transaction in this thread (so that any @Transactional calls here still work)
 
         AtomicInteger successCount = new AtomicInteger(0);
         AtomicInteger rateLimitedCount = new AtomicInteger(0);
@@ -221,8 +235,7 @@ public class FollowServiceTest {
         // Try to follow many users rapidly (more than the 50 per minute limit)
         for (int i = 0; i < 60; i++) {
             try {
-                User targetUser = createTestUser("rateTarget" + i, "target" + i + "@test.com", "Target", "User" + i);
-                followService.followUser(rateLimitUser.getId(), targetUser.getId());
+                followService.followUser(rateLimitUser.getId(), targetUsers.get(i).getId());
                 successCount.incrementAndGet();
 
                 if (i < 49) {
