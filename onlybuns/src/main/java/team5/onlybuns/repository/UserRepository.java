@@ -6,12 +6,14 @@ import org.springframework.data.jpa.repository.*;
 
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
+import team5.onlybuns.dto.UserWithStatsDto;
 import team5.onlybuns.model.User;
 
 import javax.persistence.LockModeType;
 import javax.persistence.QueryHint;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
@@ -20,6 +22,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE) // Or READ if required
     @Query("SELECT u FROM User u WHERE u.username = :username")
     User findByUsernameWithLock(@Param("username") String username);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT u FROM User u WHERE u.id = :id")
+    Optional<User> findByIdWithLock(@Param("id") Long id);
 
     //Users that havent logged in last 7 days
     @Query(value = "SELECT * FROM public.users WHERE last_active < NOW() - INTERVAL '7 days'", nativeQuery = true)
@@ -63,5 +69,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u.username FROM User u")
     List<String> findAllUsernames();
+
+//    @Query("SELECT new team5.onlybuns.dto.UserWithStatsDto(" +
+//            "u.id, u.username, u.email, u.firstName, u.lastName," +
+//            "(SELECT COUNT(f1) FROM User u1 JOIN u1.followers f1 WHERE u1.id = u.id)," +
+//            "(SELECT COUNT(f2) FROM User u2 JOIN u2.following f2 WHERE  u2.id = u.id)," +
+//            "(SELECT COUNT(p) FROM Post p WHERE p.user.id = u.id)" +
+//            ") FROM User u")
+//    Page<UserWithStatsDto> findAllWithStats(Pageable pageable);
+
+    @Query("SELECT COUNT(f1) FROM User u1 JOIN u1.followers f1 WHERE u1.id = :userId")
+    Integer countFollowersByUserId(@Param("userId") Long userId);
+    @Query("SELECT COUNT(f1) FROM User u1 JOIN u1.following f1 WHERE u1.id = :userId")
+    Integer countFollowingByUserId(@Param("userId") Long userId);
 }
 

@@ -38,4 +38,13 @@ public interface CommentsRepository extends JpaRepository<Comment, Long> {
             "WHERE EXTRACT(YEAR FROM c.created_at) = :year " +
             "ORDER BY availableMonth", nativeQuery = true)
     List<Integer> getAvailableMonthsByYear(@Param("year") int year);
+
+    @Query(value = "SELECT EXTRACT(DAY FROM c.created_at) AS commentDay, COUNT(*) AS commentCount " +
+            "FROM comments c " +
+            "WHERE EXTRACT(YEAR FROM c.created_at) = :year " +
+            "AND EXTRACT(MONTH FROM c.created_at) = :month " +
+            "AND CEIL(EXTRACT(DAY FROM c.created_at) / 7.0) = :week " +
+            "GROUP BY commentDay " +
+            "ORDER BY commentDay", nativeQuery = true)
+    List<Object[]> getCommentsForSpecificWeek(@Param("year") int year, @Param("month") int month, @Param("week") int week);
 }

@@ -101,4 +101,9 @@ public class CommentsServiceImpl implements CommentsService {
     public List<Object[]> getPerDay(Integer year, Integer month) {
         return commentsRepository.getCommentsPerDay(year, month);
     }
+
+    @Override
+    public List<Object[]> getPerWeek(Integer year, Integer month, Integer week) {
+        return commentsRepository.getCommentsForSpecificWeek(year, month, week);
+    }
 }

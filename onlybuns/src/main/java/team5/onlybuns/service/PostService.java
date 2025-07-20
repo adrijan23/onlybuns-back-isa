@@ -36,4 +36,5 @@ public interface PostService {
     List<Integer> getAvailableMonths(Integer year);
     List<Object[]> getPerMonth(Integer year);
     List<Object[]> getPerDay(Integer year, Integer month);
+    List<Object[]> getPerWeek(Integer year, Integer month, Integer week);
 }

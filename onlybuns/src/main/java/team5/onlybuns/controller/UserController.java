@@ -16,6 +16,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.web.multipart.MultipartFile;
+import team5.onlybuns.dto.UserWithStatsDto;
 import team5.onlybuns.model.Address;
 import team5.onlybuns.model.Post;
 import team5.onlybuns.model.User;
@@ -65,9 +66,9 @@ public class UserController {
 
 	@GetMapping("/user/page")
 	@PreAuthorize("hasRole('ADMIN')")
-	public Page<User> getUsers(@RequestParam(defaultValue = "0") int page,
-							   @RequestParam(defaultValue = "5") int size) {
-		return this.userService.getPaginated(page, size);
+	public Page<UserWithStatsDto> getUsers(@RequestParam(defaultValue = "0") int page,
+										   @RequestParam(defaultValue = "5") int size) {
+		return this.userService.getPaginatedWithStats(page, size);
 	}
 
 	@PostMapping("/follow/{followingId}")

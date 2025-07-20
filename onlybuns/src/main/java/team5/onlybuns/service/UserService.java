@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import team5.onlybuns.dto.UserRequest;
+import team5.onlybuns.dto.UserWithStatsDto;
 import team5.onlybuns.model.User;
 
 public interface UserService {
@@ -17,6 +18,7 @@ public interface UserService {
     User saveTransactional(UserRequest userRequest);
     void update(User user);
     Page<User> getPaginated (int page, int size);
+    Page<UserWithStatsDto> getPaginatedWithStats (int page, int size);
 //    Set<User> getFollowers(Long id);
 //    Set<User> getFollowing(Long id);
 //    void follow(Long userId, Long targetId);

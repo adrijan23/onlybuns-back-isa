@@ -229,4 +229,9 @@ public class PostServiceImpl implements PostService {
     public List<Object[]> getPerDay(Integer year, Integer month) {
         return postRepository.getPostsPerDay(year, month);
     }
+
+    @Override
+    public List<Object[]> getPerWeek(Integer year, Integer month, Integer week) {
+        return postRepository.getPostsForSpecificWeek(year, month, week);
+    }
 }

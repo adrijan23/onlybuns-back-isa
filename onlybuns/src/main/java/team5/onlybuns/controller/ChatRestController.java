@@ -30,6 +30,11 @@ public class ChatRestController {
         return chatService.getChatRoomsForUser(userId);
     }
 
+    @GetMapping("room/{roomId}")
+    public ChatRoom getChatRoom(@PathVariable Long roomId) {
+        return chatService.getChatRoomById(roomId);
+    }
+
     @PostMapping("create")
     public ResponseEntity<ChatRoom> createChatRoom(@RequestParam Long userId, @RequestParam String roomName) {
         try {
@@ -66,11 +71,22 @@ public class ChatRestController {
         }
     }
 
+    @DeleteMapping("delete-user")
+    public ResponseEntity<String> deleteUserFromRoom(@RequestParam Long id) {
+        chatService.removeUserFromChatRoom(id);
+        return ResponseEntity.status(HttpStatus.OK).body("User successfully deleted from chat");
+    }
+
     @GetMapping("messages/{roomId}/{userId}")
     public List<ChatMessage> getChatHistory(@PathVariable Long roomId, @PathVariable Long userId) {
         List<ChatMessage> messages = new ArrayList<>(chatService.getLast10Messages(roomId, userId));
         Collections.reverse(messages);
         messages.addAll(chatService.getMessages(roomId, userId));
         return messages;
+    }
+
+    @GetMapping("room/{roomId}/users")
+    public List<ChatUser> getUsers(@PathVariable Long roomId) {
+        return chatService.getUsers(roomId);
     }
 }
