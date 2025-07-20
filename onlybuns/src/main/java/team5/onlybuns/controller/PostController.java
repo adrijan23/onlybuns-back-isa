@@ -14,6 +14,7 @@ import team5.onlybuns.model.User;
 import team5.onlybuns.repository.ImageRepository;
 import team5.onlybuns.repository.PostRepository;
 import team5.onlybuns.repository.UserRepository;
+import team5.onlybuns.service.AdMessageSender;
 import team5.onlybuns.service.CommentsService;
 import team5.onlybuns.service.PostService;
 import team5.onlybuns.service.UserService;
@@ -22,6 +23,7 @@ import javax.validation.Valid;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @RestController
@@ -42,6 +44,11 @@ public class PostController {
 
     @Value("${commentsPerHourLimit}")
     private Long commentsPerHourLimit;
+
+    @Autowired
+    private AdMessageSender adMessageSender;
+
+
 
     public static final String UPLOAD_DIR = "uploads/";
 
@@ -92,6 +99,21 @@ public class PostController {
         return ResponseEntity.ok(posts);
     }
 
+    @PutMapping("/{postId}/mark-for-ads")
+    public ResponseEntity<?> markPostForAds(@PathVariable Long postId) {
+        try {
+            Post post = postService.getPost(postId);
+            post.setMarkedForAds(true);
+            Post updatedPost = postService.save(post);
+
+            adMessageSender.sendAdMessage(updatedPost); // pošalji poruku na RabbitMQ
+
+            return ResponseEntity.ok("Post marked for ads and message sent.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to mark post for ads.");
+        }
+    }
+
     @GetMapping("/{userId}")
     public ResponseEntity<List<Post>> getAllByUserId(@PathVariable Long userId) {
         List<Post> posts = postService.findByUserId(userId);
@@ -100,6 +122,7 @@ public class PostController {
         }
         return ResponseEntity.ok(posts);
     }
+
 
     @PutMapping("/id/{postId}")
     public ResponseEntity<Post> updatePost(@PathVariable Long postId,
