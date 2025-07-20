@@ -72,8 +72,8 @@ public class ChatRestController {
     }
 
     @DeleteMapping("delete-user")
-    public ResponseEntity<String> deleteUserFromRoom(@RequestParam Long userId, @RequestParam Long roomId) {
-        chatService.removeUserFromChatRoom(roomId, userId);
+    public ResponseEntity<String> deleteUserFromRoom(@RequestParam Long id) {
+        chatService.removeUserFromChatRoom(id);
         return ResponseEntity.status(HttpStatus.OK).body("User successfully deleted from chat");
     }
 

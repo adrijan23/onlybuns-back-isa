@@ -53,4 +53,14 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     @Query("SELECT COUNT(p) FROM Post p WHERE p.user.id = :userId")
     Integer countPostsByUserId(@Param("userId") Long userId);
+
+    @Query(value = "SELECT EXTRACT(DAY FROM p.created_at) AS postDay, COUNT(*) AS postCount " +
+            "FROM posts p " +
+            "WHERE EXTRACT(YEAR FROM p.created_at) = :year " +
+            "AND EXTRACT(MONTH FROM p.created_at) = :month " +
+            "AND CEIL(EXTRACT(DAY FROM p.created_at) / 7.0) = :week " +
+            "GROUP BY postDay " +
+            "ORDER BY postDay", nativeQuery = true)
+    List<Object[]> getPostsForSpecificWeek(@Param("year") int year, @Param("month")
+    int month, @Param("week") int week);
 }

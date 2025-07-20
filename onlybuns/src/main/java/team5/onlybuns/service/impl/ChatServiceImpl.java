@@ -80,10 +80,8 @@ public class ChatServiceImpl implements ChatService{
     }
 
     @Override
-    public void removeUserFromChatRoom(Long chatRoomId, Long userId) {
-        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(()-> new RuntimeException("ChatRoom not found"));
-
-        ChatUser chatUser = chatUserRepository.findByUserIdAndChatRoomId(userId, chatRoomId).orElseThrow(()-> new RuntimeException("ChatUser not found"));
+    public void removeUserFromChatRoom(Long id) {
+        ChatUser chatUser = chatUserRepository.findById(id).orElseThrow(()-> new RuntimeException("ChatUser not found"));
         chatUserRepository.delete(chatUser);
     }
 

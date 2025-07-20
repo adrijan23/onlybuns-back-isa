@@ -288,6 +288,13 @@ public class PostController {
         return postService.getPerDay(year, month);
     }
 
+    @GetMapping("/analytics/weekly")
+    public List<Object[]> getWeeklyAnalytics(@RequestParam("year") Integer year,
+                                             @RequestParam("month") Integer month,
+                                             @RequestParam("week") Integer week) {
+        return postService.getPerWeek(year, month, week);
+    }
+
     @GetMapping("/analytics")
     public List<Post> getByYear(@RequestParam("year") Integer year) {
         return postService.findByYear(year);
@@ -314,4 +321,10 @@ public class PostController {
         return commentsService.getPerDay(year, month);
     }
 
+    @GetMapping("/comments/analytics/weekly")
+    public List<Object[]> getWeeklyCommentsAnalytics(@RequestParam("year") Integer year,
+                                                     @RequestParam("month") Integer month,
+                                                     @RequestParam("week") Integer week) {
+        return commentsService.getPerWeek(year, month, week);
+    }
 }
