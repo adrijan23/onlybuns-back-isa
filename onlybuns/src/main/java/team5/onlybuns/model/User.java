@@ -16,6 +16,8 @@ import javax.persistence.ManyToMany;
 import javax.persistence.*;
 import javax.persistence.Table;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -33,7 +35,7 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "username")
+    @Column(name = "username", unique = true)
     private String username;
 
     @JsonIgnore
@@ -49,6 +51,14 @@ public class User implements UserDetails {
     @Column(name = "email")
     private String email;
 
+    @ManyToOne
+    @JoinColumn(name = "address_id", referencedColumnName = "id")
+    private Address address;
+
+    @Version
+    @Column(name = "version")
+    private Long version;
+
     @Column(name = "enabled")
     private boolean enabled;
 
@@ -57,14 +67,20 @@ public class User implements UserDetails {
 
     @Column(name= "last_active")
     private LocalDateTime lastActive;
+
+    @Column(name = "profile_image")
+    private String profileImage;
     @OneToMany(mappedBy = "user")
     private Set<Post> posts;
 
     @OneToMany(mappedBy = "user")
     private Set<Comment> comments;
 
-    @ManyToMany(mappedBy = "likes")
-    private Set<Post> likedPosts;
+    @Getter
+    @Setter
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private Set<Like> likes = new HashSet<>();
 
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -72,6 +88,64 @@ public class User implements UserDetails {
             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     private List<Role> roles;
+
+    @ManyToMany(fetch = FetchType.LAZY) // treba vratiti na LAZY
+    @JoinTable(
+            name = "user_following", // Join table name
+            joinColumns = @JoinColumn(name = "follower_id", referencedColumnName = "id"), // Foreign key for the user who is following
+            inverseJoinColumns = @JoinColumn(name = "following_id", referencedColumnName = "id") // Foreign key for the user being followed
+    )
+    @JsonIgnore // Prevent serialization by default
+    private Set<User> following = new HashSet<>();
+
+    @ManyToMany(mappedBy = "following", fetch = FetchType.LAZY) // zbog pristupa u testovima je EAGER ~Zeka
+    @JsonIgnore // To prevent infinite recursion during serialization
+    private Set<User> followers = new HashSet<>();
+
+    @Column(name = "followers_count")
+    private Long followersCount = 0L;
+
+    public Long getFollowersCount(){
+        return followersCount;
+    }
+    public void setFollowersCount(Long followersCount){
+        this.followersCount = followersCount;
+    }
+
+    @Column(name = "registration_date")
+    private LocalDateTime registrationDate;
+
+    public LocalDateTime getRegistrationDate() {
+        return registrationDate;
+    }
+    public void setRegistrationDate(LocalDateTime registrationDate) {
+        this.registrationDate = registrationDate;
+    }
+
+    public Set<User> getFollowing() {
+        return following;
+    }
+
+    public void setFollowing(Set<User> following) {
+        this.following = following;
+    }
+
+    public Set<User> getFollowers() {
+        return followers;
+    }
+
+    public void setFollowers(Set<User> followers) {
+        this.followers = followers;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
 
     public Long getId() {
         return id;
@@ -145,6 +219,14 @@ public class User implements UserDetails {
         this.email = email;
     }
 
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
+
     @Override
     public boolean isEnabled() {
         return enabled;
@@ -162,6 +244,13 @@ public class User implements UserDetails {
         this.lastPasswordResetDate = lastPasswordResetDate;
     }
 
+    public String getProfileImage() {
+        return profileImage;
+    }
+
+    public void setProfileImage(String profileImage) {
+        this.profileImage = profileImage;
+    }
 //    @ManyToMany(fetch = FetchType.LAZY)
 //    @JoinTable(
 //            name = "user_following", // name of the join table
@@ -206,6 +295,21 @@ public class User implements UserDetails {
     @Override
     public boolean isCredentialsNonExpired() {
         return true;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+
+        User user = (User) obj;
+
+        return id != null && id.equals(user.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
     }
 
 }

@@ -5,7 +5,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.PessimisticLockingFailureException;
+import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,12 +22,20 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import team5.onlybuns.dto.UserRequest;
+import team5.onlybuns.dto.UserWithStatsDto;
 import team5.onlybuns.model.Role;
 import team5.onlybuns.model.User;
+import team5.onlybuns.repository.PostRepository;
 import team5.onlybuns.repository.UserRepository;
 import team5.onlybuns.service.RoleService;
 import team5.onlybuns.service.UserService;
+
+import javax.persistence.EntityNotFoundException;
+import javax.persistence.OptimisticLockException;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -37,6 +52,22 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private EmailServiceImpl emailService;
 
+	@Autowired
+	private CacheManager cacheManager;
+	private static final int MAX_FOLLOWS_PER_MINUTE = 50;
+    @Autowired
+    private PostRepository postRepository;
+
+//	@Autowired
+//	private RateLimitService rateLimitService;
+
+	@Transactional
+	@Override
+	public User findByUsernameWithLock(String username) throws UsernameNotFoundException {
+		return userRepository.findByUsernameWithLock(username);
+	}
+
+
 	@Override
 	public User findByUsername(String username) throws UsernameNotFoundException {
 		return userRepository.findByUsername(username);
@@ -44,6 +75,15 @@ public class UserServiceImpl implements UserService {
 
 	public User findById(Long id) throws AccessDeniedException {
 		return userRepository.findById(id).orElseGet(null);
+	}
+
+	public User findByIdWithFollowing(Long id) {
+		User user = userRepository.findById(id)
+				.orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+		// Force initialization of lazy collections
+		user.setFollowing(user.getFollowing());
+		return user;
 	}
 
 	public List<User> findAll() throws AccessDeniedException {
@@ -67,6 +107,52 @@ public class UserServiceImpl implements UserService {
 		}
 	}
 
+	@Transactional(isolation = Isolation.SERIALIZABLE)
+	@Override
+	public User saveTransactional(UserRequest userRequest) {
+		try {
+			// Log entry into the method
+			System.out.println("Entering save method: " + userRequest.getUsername() + " by thread " + Thread.currentThread().getName());
+
+			// Lock the username row
+			System.out.println("Locking username: " + userRequest.getUsername());
+			User existingUser = userRepository.findByUsernameWithLock(userRequest.getUsername());
+			if (existingUser != null) {
+				throw new IllegalArgumentException("Username already exists");
+			}
+
+
+
+			// Create a new user
+			User u = new User();
+			u.setUsername(userRequest.getUsername());
+			u.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+			u.setFirstName(userRequest.getFirstname());
+			u.setLastName(userRequest.getLastname());
+			u.setEnabled(false);
+			u.setEmail(userRequest.getEmail());
+
+			// Assign roles
+			List<Role> roles = roleService.findByName("ROLE_USER");
+			u.setRoles(roles);
+
+			// Save user and return result
+			User savedUser = userRepository.save(u);
+
+			// Log successful method exit
+			System.out.println("Exiting save method successfully: " + userRequest.getUsername() + " by thread " + Thread.currentThread().getName());
+			return savedUser;
+
+		} catch (org.springframework.dao.PessimisticLockingFailureException e) {
+			System.out.println("Locking failure for username: " + userRequest.getUsername() + " by thread " + Thread.currentThread().getName());
+			throw new IllegalArgumentException("Transaction conflict: username already in use");
+
+		} catch (Exception e) {
+			System.out.println("Unexpected exception for username: " + userRequest.getUsername() + " by thread " + Thread.currentThread().getName() + " - " + e.getMessage());
+			throw e; // Rethrow to ensure other issues are not silently swallowed
+		}
+	}
+
 
 	@Override
 	public User save(UserRequest userRequest) {
@@ -74,7 +160,7 @@ public class UserServiceImpl implements UserService {
 		u.setUsername(userRequest.getUsername());
 
 		u.setPassword(passwordEncoder.encode(userRequest.getPassword()));
-		
+
 		u.setFirstName(userRequest.getFirstname());
 		u.setLastName(userRequest.getLastname());
 		u.setEnabled(false);
@@ -82,7 +168,7 @@ public class UserServiceImpl implements UserService {
 
 		List<Role> roles = roleService.findByName("ROLE_USER");
 		u.setRoles(roles);
-		
+
 		return this.userRepository.save(u);
 	}
 
@@ -95,31 +181,142 @@ public class UserServiceImpl implements UserService {
 		return userRepository.findAll(pageable);
 	}
 
+	public Page<UserWithStatsDto> getPaginatedWithStats(int page, int size) {
+		Pageable pageable = PageRequest.of(page,size);
+		Page<User> users = userRepository.findAll(pageable);
+		return users.map(user -> {
+			Integer followersCount = userRepository.countFollowersByUserId(user.getId());
+			Integer followingCount = userRepository.countFollowingByUserId(user.getId());
+			Integer postsCount = postRepository.countPostsByUserId(user.getId());
+			return new UserWithStatsDto(
+					user.getId(),
+					user.getUsername(),
+					user.getEmail(),
+					user.getFirstName(),
+					user.getLastName(),
+					followersCount,
+					followingCount,
+					postsCount);
+		});
+	}
 
-//	public void follow(Long userId, Long targetUserId) {
-//		User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-//		User targetUser = userRepository.findById(targetUserId).orElseThrow(() -> new RuntimeException("User not found"));
-//
-//		user.getFollowing().add(targetUser);
-//		userRepository.save(user);
-//	}
-//
-//	public void unfollow(Long userId, Long targetUserId) {
-//		User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-//		User targetUser = userRepository.findById(targetUserId).orElseThrow(() -> new RuntimeException("User not found"));
-//
-//		user.getFollowing().remove(targetUser);
-//		userRepository.save(user);
-//	}
-//
-//	public Set<User> getFollowers(Long userId) {
-//		User user = userRepository.findById(userId).orElseThrow();
-//		return user.getFollowers();
-//	}
-//
-//	public Set<User> getFollowing(Long userId) {
-//		User user = userRepository.findById(userId).orElseThrow();
-//		return user.getFollowing();
-//	}
+	@Scheduled(cron = "59 59 23 L * ?")
+	@Transactional
+	public void deleteDisabledUsers() {
+		LocalDateTime cutoffDate = LocalDateTime.now().minusDays(30);
+		userRepository.deleteDisabledUsers(cutoffDate);
+	}
+
+		//----------RESILIENCE IMPL----------
+	@RateLimiter(name = "standard", fallbackMethod = "rateLimitFallback") // resilience4j
+	@Transactional(isolation = Isolation.READ_COMMITTED)
+	public void followUser(Long followerId, Long followingId) {
+		//------------REDIS IMPL-------------
+//		if(!rateLimitService.checkRateLimit(followerId)){
+//			throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
+//					"You have exceeded the follow limit of "+MAX_FOLLOWS_PER_MINUTE+" per minute");
+//		}
+
+		//-----CONCURRENT DEBUG COMMENT------
+//		long now = System.currentTimeMillis();
+//		System.out.println("ENTER followUser:"+followerId+" follower={ following="+followingId+" at "+now+" on "+Thread.currentThread().getName());
+		try {
+			if(followerId.equals(followingId)){
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot follow yourself");
+			}
+
+			User follower = userRepository.findById(followerId)
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Follower not found"));
+			User following = userRepository.findByIdWithLock(followingId)
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User to follow not found"));
+
+			if(follower.getFollowing().contains(following)){
+				throw new ResponseStatusException(HttpStatus.CONFLICT, "Already following this user");
+			}
+
+			follower.getFollowing().add(following);
+			following.setFollowersCount(following.getFollowersCount() + 1);
+
+			userRepository.save(follower);
+			userRepository.save(following);
+
+		} catch (OptimisticLockException e) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT,
+					"Another operation is in progress. Please try again.");
+		} catch (PessimisticLockingFailureException e) {
+			throw new ResponseStatusException(HttpStatus.REQUEST_TIMEOUT,
+					"Operation timed out. Please try again.");
+		} catch (DataIntegrityViolationException e){
+			throw new ResponseStatusException(HttpStatus.CONFLICT,
+					"Follow relationship already exists or violates constraints");
+		}
+	}
+
+	// za resilience4j RateLimiter
+	public void rateLimitFallback(Long followerId, Long followingId, Throwable t) {
+		throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
+					"You have exceeded the follow limit of "+MAX_FOLLOWS_PER_MINUTE+" per minute");
+	}
+
+	@Transactional
+	public void unfollowUser(Long followerId, Long followingId) {
+		try{
+			User follower = userRepository.findById(followerId)
+					.orElseThrow(() -> new RuntimeException("User not found"));
+			User following = userRepository.findById(followingId)
+					.orElseThrow(() -> new RuntimeException("User not found"));
+
+			follower.getFollowing().remove(following);
+			following.setFollowersCount(following.getFollowersCount() - 1);
+			userRepository.save(follower);
+			userRepository.save(following);
+		}catch (OptimisticLockException e){
+			throw new RuntimeException("Failed to follow the user due to a concurrent update. Please try again.");
+		}
+	}
+
+	public Set<User> getFollowers(Long userId) {
+		User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+		return user.getFollowers();
+	}
+
+	public Set<User> getFollowing(Long userId) {
+		User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+		return user.getFollowing();
+	}
+
+	public List<User> getTopLikersWeekly() {
+		LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+		PageRequest pageRequest = PageRequest.of(0, 10); // Limit to top 10
+		return userRepository.findTopLikersInLastSevenDays(sevenDaysAgo, pageRequest);
+	}
+
+	public boolean checkPassword(String rawPassword, String encodedPassword) {
+		return passwordEncoder.matches(rawPassword, encodedPassword);
+	}
+
+	public void updatePassword(Long userId, String newPassword) {
+		User user = findById(userId); // Fetch the user by ID
+		user.setPassword(passwordEncoder.encode(newPassword)); // Encode the new password
+		userRepository.save(user); // Save the updated user
+	}
+
+	@Override
+	public Double getPostedPercentage() {
+		return userRepository.getUsersPostedPercentage();
+	}
+
+	@Override
+	public Double getOnlyCommentedPercentage() {
+		return userRepository.getUsersOnlyCommentedPercentage();
+	}
+
+	@Override
+	public Double getNoPostOrCommentPercentage() {
+		return userRepository.getUsersWithNoPostsOrCommentsPercentage();
+	}
+	public List<String> findAllUsernames() {
+		return userRepository.findAllUsernames();
+	}
 
 }

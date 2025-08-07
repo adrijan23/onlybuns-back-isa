@@ -1,12 +1,15 @@
 package team5.onlybuns.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 @Entity
@@ -38,6 +41,11 @@ public class Post {
     @Setter
     private LocalDateTime createdAt;
 
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    @Getter
+    @Setter
+    private boolean markedForAds = false;
+
     @ManyToOne
     @Getter
     @Setter
@@ -47,9 +55,11 @@ public class Post {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Set<Comment> comments = new HashSet<>();
 
-    @ManyToMany
     @Getter
-    private Set<User> likes = new HashSet<>();
+    @Setter
+    @JsonIgnore
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Like> likes = new HashSet<>();
 
     public Post() {
         this.createdAt = LocalDateTime.now();

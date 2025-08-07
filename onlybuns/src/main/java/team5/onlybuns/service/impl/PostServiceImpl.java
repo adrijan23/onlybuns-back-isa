@@ -1,10 +1,14 @@
 package team5.onlybuns.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import team5.onlybuns.model.Like;
 import team5.onlybuns.model.Post;
 import team5.onlybuns.model.User;
+import team5.onlybuns.repository.LikeRepository;
 import team5.onlybuns.repository.PostRepository;
 import team5.onlybuns.repository.UserRepository;
 import team5.onlybuns.service.PostService;
@@ -13,9 +17,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class PostServiceImpl implements PostService {
@@ -27,6 +33,9 @@ public class PostServiceImpl implements PostService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private LikeRepository likeRepository;
 
     // Method to create a new post
     public Post createPost(String description, String address, Long userId, MultipartFile file) throws IOException {
@@ -113,10 +122,18 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Add the user to the post's likes if not already liked
-        if (!post.getLikes().contains(user)) {
-            post.getLikes().add(user);
+        // Check if the like already exists
+        boolean alreadyLiked = post.getLikes().stream()
+                .anyMatch(like -> like.getUser().equals(user));
+        if (alreadyLiked) {
+            throw new RuntimeException("Post already liked by user");
         }
+
+        // Create and save the like
+        Like like = new Like();
+        like.setPost(post);
+        like.setUser(user);
+        post.getLikes().add(like);
 
         return postRepository.save(post);
     }
@@ -125,15 +142,96 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Remove the user from the post's likes if liked
-        post.getLikes().remove(user);
-
+        // Find and remove the like
+        post.getLikes().removeIf(like -> like.getUser().equals(user));
         return postRepository.save(post);
     }
 
     @Override
-    public Set<User> getLikes(Long postId, Long userId) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
-        return post.getLikes();
+    public Set<User> getLikes(Long postId) {
+        // Fetch the post by ID
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        // Extract the users who liked the post from the Like entities
+        Set<User> usersWhoLiked = post.getLikes().stream()
+                .map(Like::getUser)
+                .collect(Collectors.toSet());
+
+        return usersWhoLiked;
+    }
+
+    @Override
+    public boolean hasUserLikedPost(Long postId, Long userId) {
+        // Fetch the post by ID
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        // Check if the likes contain the current user
+        return post.getLikes().stream()
+                .anyMatch(like -> like.getUser().getId().equals(userId));
+    }
+
+    public Integer getPostLikeCount(Long postId) {
+        // Validate the post exists
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        // Query the count of likes for the post
+        return likeRepository.countByPostId(postId);
+    }
+
+    @Override
+    public List<Post> findByYear(Integer year) {
+        return postRepository.findPostsByYear(year);
+    }
+
+
+    @Override
+    public Integer getPostCount() {
+        return (int)postRepository.count();
+    }
+
+    @Override
+    public Integer getPostsInLastMonth() {
+        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
+        return postRepository.countPostsInLastMonth(thirtyDaysAgo);
+    }
+
+    @Override
+    @Cacheable("topPostsWeekly")
+    public List<Post> getTopPostsLast7Days() {
+        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+        return postRepository.findTopPostsLast7Days(sevenDaysAgo, PageRequest.of(0, 5));
+    }
+
+    @Override
+    @Cacheable("topPostsAllTime")
+    public List<Post> getTopPostsAllTime() {
+        return postRepository.findTopPostsAllTime(PageRequest.of(0, 10)); // Top 10 posts
+    }
+
+    @Override
+    public List<Integer> getAvailableYears() {
+        return postRepository.getAvailablePostYears();
+    }
+
+    @Override
+    public List<Integer> getAvailableMonths(Integer year) {
+        return postRepository.getAvailableMonthsByYear(year);
+    }
+
+    public List<Object[]> getPerMonth(Integer year){
+        return postRepository.getPostsPerMonth(year);
+    }
+
+    @Override
+    public List<Object[]> getPerDay(Integer year, Integer month) {
+        return postRepository.getPostsPerDay(year, month);
+    }
+
+    @Override
+    public List<Object[]> getPerWeek(Integer year, Integer month, Integer week) {
+        return postRepository.getPostsForSpecificWeek(year, month, week);
     }
 }

@@ -1,6 +1,7 @@
 package team5.onlybuns.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,17 +14,19 @@ import team5.onlybuns.model.User;
 import team5.onlybuns.repository.ImageRepository;
 import team5.onlybuns.repository.PostRepository;
 import team5.onlybuns.repository.UserRepository;
+import team5.onlybuns.service.AdMessageSender;
 import team5.onlybuns.service.CommentsService;
 import team5.onlybuns.service.PostService;
 import team5.onlybuns.service.UserService;
 
 import javax.validation.Valid;
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/api/posts")
 public class PostController {
 
@@ -38,6 +41,14 @@ public class PostController {
 
     @Autowired
     private CommentsService commentsService;
+
+    @Value("${commentsPerHourLimit}")
+    private Long commentsPerHourLimit;
+
+    @Autowired
+    private AdMessageSender adMessageSender;
+
+
 
     public static final String UPLOAD_DIR = "uploads/";
 
@@ -88,6 +99,21 @@ public class PostController {
         return ResponseEntity.ok(posts);
     }
 
+    @PutMapping("/{postId}/mark-for-ads")
+    public ResponseEntity<?> markPostForAds(@PathVariable Long postId) {
+        try {
+            Post post = postService.getPost(postId);
+            post.setMarkedForAds(true);
+            Post updatedPost = postService.save(post);
+
+            adMessageSender.sendAdMessage(updatedPost); // pošalji poruku na RabbitMQ
+
+            return ResponseEntity.ok("Post marked for ads and message sent.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to mark post for ads.");
+        }
+    }
+
     @GetMapping("/{userId}")
     public ResponseEntity<List<Post>> getAllByUserId(@PathVariable Long userId) {
         List<Post> posts = postService.findByUserId(userId);
@@ -97,13 +123,18 @@ public class PostController {
         return ResponseEntity.ok(posts);
     }
 
-    @PutMapping("/id/{postId}")
-    public ResponseEntity<Post> updatePost(@PathVariable Long postId, @RequestBody PostRequest postRequest) {
-        try {
-            // Retrieve the existing post
-            Post post = postService.getPost(postId);
 
-            // Update the description and other fields
+    @PutMapping("/id/{postId}")
+    public ResponseEntity<Post> updatePost(@PathVariable Long postId,
+                                            @Valid @RequestPart PostRequest postRequest,
+                                           @RequestPart(value = "image", required = false) MultipartFile image   ) {
+        try {
+            Post post = postService.getPost(postId);
+            String imagePath = null;
+            if (image != null && !image.isEmpty()) {
+                imagePath = imageRepository.saveImage(image);
+                post.setImagePath(imagePath);
+            }
             post.setDescription(postRequest.getDescription());
             post.setAddress(postRequest.getAddress());
             post.setLatitude(postRequest.getLatitude());
@@ -129,10 +160,10 @@ public class PostController {
     }
 
     @PostMapping("/{postId}/like")
-    public ResponseEntity<Post> likePost(@PathVariable Long postId, @RequestParam Long userId) {
+    public ResponseEntity<Post> likePost(@PathVariable Long postId, Principal user) {
         try {
-
-            Post added = postService.addLike(postId, userId);
+            User currentUser = this.userService.findByUsername(user.getName());
+            Post added = postService.addLike(postId, currentUser.getId());
 
             if (added != null) {
                 return ResponseEntity.ok(added);
@@ -146,10 +177,10 @@ public class PostController {
     }
 
     @DeleteMapping("/{postId}/like")
-    public ResponseEntity<Post> unlikePost(@PathVariable Long postId, @RequestParam Long userId) {
+    public ResponseEntity<Post> unlikePost(@PathVariable Long postId, Principal user) {
         try {
-
-            Post removed = postService.removeLike(postId, userId);
+            User currentUser = this.userService.findByUsername(user.getName());
+            Post removed = postService.removeLike(postId, currentUser.getId());
 
             if (removed != null) {
                 return ResponseEntity.ok(removed);
@@ -163,10 +194,10 @@ public class PostController {
     }
 
     @GetMapping("/{postId}/likes")
-    public ResponseEntity<Set<User>> getLikes(@PathVariable Long postId, @RequestParam Long userId) {
+    public ResponseEntity<Set<User>> getLikes(@PathVariable Long postId) {
         try {
 
-            Set<User> likes = postService.getLikes(postId, userId);
+            Set<User> likes = postService.getLikes(postId);
 
             if (likes != null) {
                 return ResponseEntity.ok(likes);
@@ -178,7 +209,26 @@ public class PostController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-      
+
+    @GetMapping("/{postId}/has_liked")
+    public ResponseEntity<Boolean> hasLikedPost(@PathVariable Long postId, Principal user) {
+        User currentUser = this.userService.findByUsername(user.getName());
+        boolean hasLiked = postService.hasUserLikedPost(postId, currentUser.getId());
+        return ResponseEntity.ok(hasLiked);
+    }
+
+    @GetMapping("/{postId}/like_count")
+    public ResponseEntity<Long> getPostLikeCount(@PathVariable Long postId) {
+        try {
+            long likeCount = postService.getPostLikeCount(postId); // Efficient query for count
+            return ResponseEntity.ok(likeCount);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     @GetMapping("/{postId}/comments")
     public ResponseEntity<List<Comment>> getCommentsByPostId(@PathVariable Long postId) {
         List<Comment> comments = commentsService.findCommentsByPostId(postId);
@@ -191,8 +241,18 @@ public class PostController {
     }
 
     @PostMapping("/{postId}/comments")
-    public ResponseEntity<Comment> addComment(@PathVariable Long postId, @RequestBody CommentRequest comment) {
+    public ResponseEntity<?> addComment(@PathVariable Long postId, @RequestBody CommentRequest comment) {
         try {
+            User userCommenting = userService.findById(comment.getUserId());
+            User userPosted = postService.getPost(postId).getUser();
+            Set<User> userFollowing = userService.getFollowing(userCommenting.getId());
+            Long a = commentsService.findCommentsCountFromLastHourForUser(userCommenting.getId());
+            if (!(userFollowing.contains(userPosted)) && userCommenting != userPosted) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You must follow the post owner to comment.");
+            } else if(commentsService.findCommentsCountFromLastHourForUser(userCommenting.getId()) > commentsPerHourLimit - 1) {
+                return ResponseEntity.status(429).body("You've exceeded limit of " + commentsPerHourLimit + " comments per hour.");
+            }
+
             Comment createdComment = commentsService.createComment(comment.getContent(), postId, comment.getUserId());
             return ResponseEntity.status(HttpStatus.CREATED).body(createdComment);
         } catch (Exception e) {
@@ -200,4 +260,94 @@ public class PostController {
         }
     }
 
+    @GetMapping("/count/total")
+    public ResponseEntity<Integer> getPostCount() {
+        try {
+            Integer count = postService.getPostCount();
+            return ResponseEntity.status(HttpStatus.OK).body(count);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/count/last-month")
+    public Integer getMonthlyPosts() {
+        return postService.getPostsInLastMonth();
+    }
+
+    @GetMapping("/top-weekly")
+    public List<Post> getTopPostsWeekly() {
+        return postService.getTopPostsLast7Days();
+    }
+
+    @GetMapping("/top-all-time")
+    public List<Post> getTopPostsAllTime() {
+        return postService.getTopPostsAllTime();
+    }
+
+    @GetMapping("/{postId}/comment-count")
+    public Integer getCommentsCount(@PathVariable Long postId) {
+        return commentsService.countByPostId(postId);
+    }
+
+    @GetMapping("/years")
+    public List<Integer> getAvailableYears() {
+        return postService.getAvailableYears();
+    }
+
+    @GetMapping("/months")
+    public List<Integer> getAvailableMonths(@RequestParam Integer year) {
+        return postService.getAvailableMonths(year);
+    }
+
+    @GetMapping("/analytics/yearly")
+    public List<Object[]> getYearlyAnalytics(@RequestParam("year") Integer year) {
+        return postService.getPerMonth(year);
+    }
+
+    @GetMapping("/analytics/monthly")
+    public List<Object[]> getMonthlyAnalytics(@RequestParam("year") Integer year
+    , @RequestParam("month") Integer month) {
+        return postService.getPerDay(year, month);
+    }
+
+    @GetMapping("/analytics/weekly")
+    public List<Object[]> getWeeklyAnalytics(@RequestParam("year") Integer year,
+                                             @RequestParam("month") Integer month,
+                                             @RequestParam("week") Integer week) {
+        return postService.getPerWeek(year, month, week);
+    }
+
+    @GetMapping("/analytics")
+    public List<Post> getByYear(@RequestParam("year") Integer year) {
+        return postService.findByYear(year);
+    }
+
+    @GetMapping("/comments/years")
+    public List<Integer> getCommentsYears() {
+        return commentsService.getAvailableYears();
+    }
+
+    @GetMapping("/comments/months")
+    public List<Integer> getCommentsMonths(@RequestParam Integer year) {
+        return commentsService.getAvailableMonths(year);
+    }
+
+    @GetMapping("/comments/analytics/yearly")
+    public List<Object[]> getYearlyCommentsAnalytics(@RequestParam("year") Integer year) {
+        return commentsService.getPerMonth(year);
+    }
+
+    @GetMapping("/comments/analytics/monthly")
+    public List<Object[]> getMonthlyCommentsAnalytics(@RequestParam("year") Integer year
+            , @RequestParam("month") Integer month) {
+        return commentsService.getPerDay(year, month);
+    }
+
+    @GetMapping("/comments/analytics/weekly")
+    public List<Object[]> getWeeklyCommentsAnalytics(@RequestParam("year") Integer year,
+                                                     @RequestParam("month") Integer month,
+                                                     @RequestParam("week") Integer week) {
+        return commentsService.getPerWeek(year, month, week);
+    }
 }

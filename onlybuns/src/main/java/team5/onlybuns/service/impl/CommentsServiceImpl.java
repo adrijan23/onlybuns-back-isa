@@ -52,6 +52,11 @@ public class CommentsServiceImpl implements CommentsService {
         return commentsRepository.save(comment);
     }
 
+    @Override
+    public Long findCommentsCountFromLastHourForUser(Long userId) {
+        return commentsRepository.findCommentsCountFromLastHourForUser(userId);
+    }
+
     public Comment updateComment(Long commentId, String newContent) {
         Optional<Comment> existingComment = commentsRepository.findById(commentId);
 
@@ -70,5 +75,35 @@ public class CommentsServiceImpl implements CommentsService {
         } else {
             throw new RuntimeException("Comment not found");
         }
+    }
+
+    @Override
+    public Integer countByPostId(Long postId){
+        return commentsRepository.countByPostId(postId);
+    }
+
+    @Override
+    public List<Integer> getAvailableYears() {
+        return commentsRepository.getAvailableYears();
+    }
+
+    @Override
+    public List<Integer> getAvailableMonths(Integer year) {
+        return commentsRepository.getAvailableMonthsByYear(year);
+    }
+
+    @Override
+    public List<Object[]> getPerMonth(Integer year) {
+        return commentsRepository.getCommentsPerMonth(year);
+    }
+
+    @Override
+    public List<Object[]> getPerDay(Integer year, Integer month) {
+        return commentsRepository.getCommentsPerDay(year, month);
+    }
+
+    @Override
+    public List<Object[]> getPerWeek(Integer year, Integer month, Integer week) {
+        return commentsRepository.getCommentsForSpecificWeek(year, month, week);
     }
 }
