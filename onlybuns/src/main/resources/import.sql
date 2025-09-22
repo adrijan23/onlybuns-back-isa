@@ -16,6 +16,7 @@ INSERT INTO USERS (username, password, first_name, last_name, email, enabled, la
 INSERT INTO USERS (username, password, first_name, last_name, email, enabled, last_password_reset_date, version, address_id, registration_date, followers_count) VALUES ('user2', '$2a$10$dpZUUh0IuhiyL5a5/ltkLOU2NZzsafOy3aQWmngM1x3hfzndIbsOm', 'Nikola', 'Nikolic', 'user2@example.com', true, '2017-10-01 18:57:58.508-07', 0, 5, '2017-10-01 21:58:58.508-07', 0);
 INSERT INTO USERS (username, password, first_name, last_name, email, enabled, last_password_reset_date, version, address_id, registration_date, followers_count) VALUES ('user3', '$2a$10$dpZUUh0IuhiyL5a5/ltkLOU2NZzsafOy3aQWmngM1x3hfzndIbsOm', 'Nikola', 'Nikolic', 'user3@example.com', true, '2017-10-01 18:57:58.508-07', 0, 6, '2017-10-01 21:58:58.508-07', 0);
 INSERT INTO USERS (username, password, first_name, last_name, email, enabled, last_password_reset_date, version, address_id, registration_date, followers_count) VALUES ('user4', '$2a$10$dpZUUh0IuhiyL5a5/ltkLOU2NZzsafOy3aQWmngM1x3hfzndIbsOm', 'Nikola', 'Nikolic', 'user4@example.com', true, '2017-10-01 18:57:58.508-07', 0, 7, '2017-10-01 21:58:58.508-07', 0);
+INSERT INTO USERS (username, password, first_name, last_name, email, enabled, last_password_reset_date, version, address_id, registration_date, followers_count) VALUES ('jovan12', '$2a$10$scPRY9CFGRGBeUiYr1XPcOP4fvFyg8otE3KjDXL/lyKWmQdjN6oju', 'Jovan', 'Jovanic', 'jovan@example.com', false, '2017-10-01 21:58:58.508-07', 0, 1, '2017-10-01 21:58:58.508-07', 1);
 
 INSERT INTO ROLE (name) VALUES ('ROLE_USER');
 INSERT INTO ROLE (name) VALUES ('ROLE_ADMIN');
@@ -27,6 +28,7 @@ INSERT INTO USER_ROLE (user_id, role_id) VALUES (3, 1); -- user-u dodeljujemo ro
 INSERT INTO USER_ROLE (user_id, role_id) VALUES (4, 1); -- user-u dodeljujemo rolu USER
 INSERT INTO USER_ROLE (user_id, role_id) VALUES (5, 1); -- user-u dodeljujemo rolu USER
 INSERT INTO USER_ROLE (user_id, role_id) VALUES (6, 1); -- user-u dodeljujemo rolu USER
+INSERT INTO USER_ROLE (user_id, role_id) VALUES (8, 1); -- user-u dodeljujemo rolu USER
 
 INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('123 5th Avenue, New York, NY', '2023-11-09 14:30:00', 'Beautiful sunset view', 'uploads/1_rabbit.jpg', 40.741895, -73.989308, 1);
 INSERT INTO POSTS (address, created_at, description, image_path, latitude, longitude, user_id) VALUES ('456 Madison Avenue, New York, NY', '2024-11-09 15:45:00', 'Cute rabbit in the park', 'uploads/2_rabbit.jpg', 40.758896, -73.985130, 2);

@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -68,7 +69,7 @@ public class AuthenticationController {
 	}
 
 	@PostMapping("/login")
-	public ResponseEntity<UserTokenState> createAuthenticationToken(
+	public ResponseEntity<?> createAuthenticationToken(
 			@RequestBody JwtAuthenticationRequest authenticationRequest, HttpServletRequest request, HttpServletResponse response) {
 
 		String clientIp = request.getRemoteAddr();
@@ -99,7 +100,10 @@ public class AuthenticationController {
 			int expiresIn = tokenUtils.getExpiredIn();
 			onLoginSuccess();
 			return ResponseEntity.ok(new UserTokenState(jwt, expiresIn));
-		} catch (Exception e) {
+		} catch (DisabledException ex) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN)
+					.body("Account is not activated. Please check your email for the activation link.");
+		}catch (Exception e) {
 			// Registrujemo neuspešan pokušaj logina
 			registerFailedAttempt(clientIp);
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
