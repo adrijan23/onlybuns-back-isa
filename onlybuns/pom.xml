@@ -16,6 +16,10 @@
 	<description>Spring Se</description>
 	<properties>
 		<java.version>11</java.version>
+		<junit.jupiter.tags></junit.jupiter.tags>
+		<junit.jupiter.excludeTags></junit.jupiter.excludeTags>
+		<!-- verzija Surefire plugina (radi sa JUnit 5 tagovima) -->
+		<surefire.version>3.2.5</surefire.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -54,6 +58,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.junit.vintage</groupId>
+					<artifactId>junit-vintage-engine</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.security</groupId>
@@ -77,11 +87,7 @@
 			<groupId>org.ehcache</groupId>
 			<artifactId>ehcache</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>io.github.resilience4j</groupId>
-			<artifactId>resilience4j-spring-boot2</artifactId>
-			<version>2.1.0</version>
-		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-aop</artifactId>
@@ -104,10 +110,6 @@
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-websocket</artifactId>
-		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-websocket</artifactId>
@@ -135,10 +137,6 @@
 <!--			<groupId>org.springframework.boot</groupId>-->
 <!--			<artifactId>spring-boot-starter-data-redis</artifactId>-->
 <!--		</dependency>-->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-amqp</artifactId>
-		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -168,6 +166,33 @@
 					</excludes>
 				</configuration>
 			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.2.5</version>
+				<configuration>
+					<!-- Excludes za integration testove -->
+					<excludes>
+						<exclude>**/*ApplicationTests.java</exclude>
+						<exclude>**/FollowServiceTest.java</exclude>
+						<exclude>**/OnlybunsApplicationTests.java</exclude>
+						<exclude>**/UserServiceTests.java</exclude>
+						<!-- Dodaj sve integration testove ovdje -->
+					</excludes>
+
+					<properties>
+						<configurationParameters>
+							junit.jupiter.tags=${junit.jupiter.tags}
+						</configurationParameters>
+					</properties>
+					<systemPropertyVariables>
+						<junit.jupiter.tags>${junit.jupiter.tags}</junit.jupiter.tags>
+						<junit.jupiter.excludeTags>${junit.jupiter.excludeTags}</junit.jupiter.excludeTags>
+					</systemPropertyVariables>
+				</configuration>
+			</plugin>
+
 		</plugins>
 	</build>
 
