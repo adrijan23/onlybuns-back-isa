@@ -21,6 +21,17 @@
 		<!-- verzija Surefire plugina (radi sa JUnit 5 tagovima) -->
 		<surefire.version>3.2.5</surefire.version>
 	</properties>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.testcontainers</groupId>
+				<artifactId>testcontainers-bom</artifactId>
+				<version>1.19.7</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -143,6 +154,19 @@
 			<artifactId>spring-boot-starter-amqp</artifactId>
 		</dependency>
 
+		<!-- Testcontainers core + JUnit Jupiter integracija -->
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- Postgres modul -->
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
 	<repositories>
@@ -170,28 +194,41 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.2.5</version>
+				<version>${surefire.version}</version>
 				<configuration>
-					<!-- Excludes za integration testove -->
+					<includes>
+						<include>**/*Test.java</include>
+						<include>**/*Tests.java</include>
+						<include>**/*TestCase.java</include>
+						<include>**/*IT.java</include>
+						<include>**/*ITCase.java</include>
+					</includes>
+
+					<!-- stari root testovi koje želiš IGNORE zauvek -->
 					<excludes>
 						<exclude>**/*ApplicationTests.java</exclude>
-						<exclude>**/FollowServiceTest.java</exclude>
 						<exclude>**/OnlybunsApplicationTests.java</exclude>
 						<exclude>**/UserServiceTests.java</exclude>
-						<!-- Dodaj sve integration testove ovdje -->
+						<exclude>**/FollowServiceTest.java</exclude>
 					</excludes>
 
+					<!-- >>> OVO JE BITNO za JUnit 5 tagove <<< -->
 					<properties>
 						<configurationParameters>
 							junit.jupiter.tags=${junit.jupiter.tags}
+							junit.jupiter.excludeTags=${junit.jupiter.excludeTags}
 						</configurationParameters>
 					</properties>
+
+					<!-- može i ovde za svaki slučaj (dupliramo) -->
 					<systemPropertyVariables>
 						<junit.jupiter.tags>${junit.jupiter.tags}</junit.jupiter.tags>
 						<junit.jupiter.excludeTags>${junit.jupiter.excludeTags}</junit.jupiter.excludeTags>
 					</systemPropertyVariables>
 				</configuration>
 			</plugin>
+
+
 
 		</plugins>
 	</build>
